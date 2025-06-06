@@ -10,7 +10,7 @@ public class AppLauncher extends Application {
     @Override
     public void start(Stage primaryStage) {
         MainView view = new MainView();
-        MainController controller = new MainController();
+        MainController controller = new MainController(null, view);
 
         Scene scene = new Scene(view.getView(), 800, 600);
         primaryStage.setScene(scene);

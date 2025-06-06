@@ -1,6 +1,9 @@
 package network.simulation.test.Model;
 
 import org.junit.jupiter.api.Test;
+
+import network.simulation.test.Model.Nodes.Node;
+
 import org.junit.jupiter.api.BeforeEach;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

@@ -46,7 +46,7 @@
             <artifactId>exec-maven-plugin</artifactId>
             <version>3.1.0</version>
             <configuration>
-                <mainClass>your.package.MainApp</mainClass>
+                <mainClass>network.simulation.test.AppLauncher</mainClass>
                 <commandlineArgs></commandlineArgs>
             </configuration>
         </plugin>

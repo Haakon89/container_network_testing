@@ -1,4 +1,4 @@
-package network.simulation.test.Model;
+package network.simulation.test.Model.Nodes;
 
 import java.util.ArrayList;
 import java.util.HashMap;

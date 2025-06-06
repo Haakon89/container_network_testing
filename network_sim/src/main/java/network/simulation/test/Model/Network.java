@@ -2,6 +2,8 @@ package network.simulation.test.Model;
 
 import java.util.ArrayList;
 
+import network.simulation.test.Model.Nodes.Node;
+
 public class Network {
 
     private String name;
