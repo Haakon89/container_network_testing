@@ -3,20 +3,18 @@ package network.simulation.test.Model;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import network.simulation.test.Model.Nodes.Node;
+import network.simulation.test.Model.Nodes.Device;
 
 public class Model implements IModel {
 
     String name;
     HashMap<String, Network> networks;
-    HashMap<String, Node> nodes;
-    ArrayList<Node> unassignedNodes;
+    ArrayList<Device> unassignedDevices;
 
     public Model() {
         this.name = "";
         this.networks = new HashMap<>();
-        this.nodes = new HashMap<>();
-        this.unassignedNodes = new ArrayList<>();
+        this.unassignedDevices = new ArrayList<>();
     }
     
     public void setName(String name) {
@@ -24,53 +22,15 @@ public class Model implements IModel {
     }
 
     @Override
+    public String getName() {
+        return this.name;
+    }
+    @Override
     public void createNetwork(String name, String adressRange) {
         Network network = new Network(name, adressRange);
         this.networks.put(name, network);
         System.out.println("Network " + name + " created with address range " + adressRange);
         System.out.println("Available networks: " + networks.keySet());
-    }
-    
-    public Network getNetwork(String name) {
-        return networks.get(name);
-    }
-
-    @Override
-    public void createNode(String name, String baseImage) {
-        Node node = new Node(name, baseImage);
-        this.unassignedNodes.add(node);
-    }
-    
-    public void writeDockerfile(String path) {
-        // Implementation for writing Dockerfile
-    }
-
-    @Override
-    public String getName() {
-        return this.name;
-    }
-
-    @Override
-    public ArrayList<String> getNetworks() {
-        ArrayList<String> networkNames = new ArrayList<>();
-        for (String networkName : networks.keySet()) {
-            networkNames.add(networkName);
-        }
-        return networkNames;
-    }
-
-    @Override
-    public HashMap<String, ArrayList<String>> getNodesRelations() {
-        HashMap<String, ArrayList<String>> nodeNames = new HashMap<>();
-        for (String nodeName : nodes.keySet()) {
-            Node node = nodes.get(nodeName);
-            ArrayList<String> networkList = new ArrayList<>();
-            for (String network : node.getNetworks()) {
-                networkList.add(network);
-            }
-            nodeNames.put(nodeName, networkList);
-        }
-        return nodeNames;
     }
 
     @Override
@@ -85,30 +45,96 @@ public class Model implements IModel {
     }
 
     @Override
-    public void addStandardNode() {
-        String number = String.valueOf(unassignedNodes.size() + 1);
-        String name = "Node" + number;
-        String baseImage = "ubuntu:latest"; // Default base image for standard nodes
-        Node node = new Node(name, baseImage);
-        this.unassignedNodes.add(node);
+    public void createDevice(String name, String baseImage) {
+        Device device = new Device(name, baseImage);
+        this.unassignedDevices.add(device);
     }
 
     @Override
-    public ArrayList<Node> getUnassignedNodes() {
-        return this.unassignedNodes;
+    public void addStandardDevice() {
+        String number = String.valueOf(unassignedDevices.size() + 1);
+        String name = "device" + number;
+        String baseImage = "ubuntu:latest"; // Default base image for standard devices
+        Device device = new Device(name, baseImage);
+        this.unassignedDevices.add(device);
+        System.out.println("Device " + name + " created.");
+        System.out.println("Available unassigned devices: " + this.unassignedDevices);
+    }
+    
+    @Override
+    public ArrayList<String> getNetworks() {
+        ArrayList<String> networkNames = new ArrayList<>();
+        for (String networkName : networks.keySet()) {
+            networkNames.add(networkName);
+        }
+        return networkNames;
+    }
+
+    public ArrayList<Device> getDevicesInNetwork(String networkName) {
+        Network network = networks.get(networkName);
+        if (network != null) {
+            return network.getDevicesInNetwork();
+        } else {
+            System.out.println("Network " + networkName + " not found.");
+            return new ArrayList<>();
+        }
     }
 
     @Override
-    public void deleteNode(String string) {
-        
+    public ArrayList<Device> getUnassignedDevices() {
+        return this.unassignedDevices;
     }
 
     @Override
-    public void assignNode(String string, String string2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'assignNode'");
+    public void deleteDevice(String name, String home) {
+        if (home.equals("unassigned")) {
+            for (Device device : unassignedDevices) {
+                if (device.getName().equals(name)) {
+                    unassignedDevices.remove(device);
+                    return;
+                }
+            }
+        } else {
+            Network network = networks.get(home);
+            if (network != null) {
+                Device deviceToRemove = null;
+                for (Device device : network.getDevicesInNetwork()) {
+                    if (device.getName().equals(name)) {
+                        deviceToRemove = device;
+                        break;
+                    }
+                }
+                if (deviceToRemove != null) {
+                    network.removeDevice(deviceToRemove);
+                } else {
+                    System.out.println("device " + name + " not found in network " + home + ".");
+                }
+            } else {
+                System.out.println("Network " + home + " not found.");
+            }
+        }
     }
 
+    @Override
+    public void assignDevice(String device, String network) {
+        this.networks.get(network).addDevice(
+            this.unassignedDevices.stream()
+                .filter(d -> d.getName().equals(device))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Device not found: " + device))
+        );
+        this.unassignedDevices.removeIf(d -> d.getName().equals(device));
+        this.networks.get(network).addDevice(
+            this.unassignedDevices.stream()
+                .filter(d -> d.getName().equals(device))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Device not found: " + device))
+        );
+    }
+
+    public void writeDockerfile(String path) {
+        // Implementation for writing Dockerfile
+    }
     
 
 

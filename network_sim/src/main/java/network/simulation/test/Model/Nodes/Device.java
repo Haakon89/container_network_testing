@@ -3,7 +3,7 @@ package network.simulation.test.Model.Nodes;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class Node {
+public class Device {
     
     private String name;
     private String baseImage;
@@ -16,7 +16,7 @@ public class Node {
     private boolean priveledge;
     private ArrayList<String> capabilities;
 
-    public Node(String name, String baseImage) {
+    public Device(String name, String baseImage) {
         this.name = name;
         this.baseImage = baseImage;
         this.packagesToInstall = new ArrayList<>();

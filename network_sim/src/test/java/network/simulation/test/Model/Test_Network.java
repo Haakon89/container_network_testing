@@ -2,7 +2,7 @@ package network.simulation.test.Model;
 
 import org.junit.jupiter.api.Test;
 
-import network.simulation.test.Model.Nodes.Node;
+import network.simulation.test.Model.Nodes.Device;
 
 import org.junit.jupiter.api.BeforeEach;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -37,48 +37,48 @@ public class Test_Network {
     }
 
     @Test
-    void testAddNode() {
-        Node nodeOne = new Node("Node1", "ubuntu:latest");
-        int numberOFNodesAtInitialization = 0;
-        assertEquals(numberOFNodesAtInitialization, testNetworkOne.getNodesInNetwork().size());
-        testNetworkOne.addNode(nodeOne);
-        int numberOfNodesAfterAdding = 1;
-        assertEquals(numberOfNodesAfterAdding, testNetworkOne.getNodesInNetwork().size()); 
+    void testAddDevice() {
+        Device deviceOne = new Device("device1", "ubuntu:latest");
+        int numberOFDevicesAtInitialization = 0;
+        assertEquals(numberOFDevicesAtInitialization, testNetworkOne.getDevicesInNetwork().size());
+        testNetworkOne.addDevice(deviceOne);
+        int numberOfDevicesAfterAdding = 1;
+        assertEquals(numberOfDevicesAfterAdding, testNetworkOne.getDevicesInNetwork().size()); 
     }  
     
     @Test
-    void testAddNodeToFullNetwork() {
+    void testAddDeviceToFullNetwork() {
         for (int i = 0; i < NETONECAP; i++) {
-            Node node = new Node("Node" + i, "ubuntu:latest");
-            testNetworkOne.addNode(node);
+            Device Device = new Device("Device" + i, "ubuntu:latest");
+            testNetworkOne.addDevice(Device);
         }
-        int numberOfNodesAtFullCapacity = NETONECAP;
-        assertEquals(numberOfNodesAtFullCapacity, testNetworkOne.getNodesInNetwork().size());
+        int numberOfDevicesAtFullCapacity = NETONECAP;
+        assertEquals(numberOfDevicesAtFullCapacity, testNetworkOne.getDevicesInNetwork().size());
         
-        Node extraNode = new Node("ExtraNode", "ubuntu:latest");
-        testNetworkOne.addNode(extraNode);
-        // Should not add the extra node since the network is full
-        assertEquals(numberOfNodesAtFullCapacity, testNetworkOne.getNodesInNetwork().size());
+        Device extraDevice = new Device("ExtraDevice", "ubuntu:latest");
+        testNetworkOne.addDevice(extraDevice);
+        // Should not add the extra Device since the network is full
+        assertEquals(numberOfDevicesAtFullCapacity, testNetworkOne.getDevicesInNetwork().size());
     }
 
     @Test
-    void testRemoveNode() {
-        Node nodeOne = new Node("Node1", "ubuntu:latest");
-        testNetworkOne.addNode(nodeOne);
-        int numberOfNodesAfterAdding = 1;
-        assertEquals(numberOfNodesAfterAdding, testNetworkOne.getNodesInNetwork().size());
+    void testRemoveDevice() {
+        Device DeviceOne = new Device("Device1", "ubuntu:latest");
+        testNetworkOne.addDevice(DeviceOne);
+        int numberOfDevicesAfterAdding = 1;
+        assertEquals(numberOfDevicesAfterAdding, testNetworkOne.getDevicesInNetwork().size());
         
-        testNetworkOne.removeNode(nodeOne);
-        int numberOfNodesAfterRemoving = 0;
-        assertEquals(numberOfNodesAfterRemoving, testNetworkOne.getNodesInNetwork().size());
+        testNetworkOne.removeDevice(DeviceOne);
+        int numberOfDevicesAfterRemoving = 0;
+        assertEquals(numberOfDevicesAfterRemoving, testNetworkOne.getDevicesInNetwork().size());
     }
 
     @Test
-    void testRemoveNodeNotInNetwork() {
-        Node nodeOne = new Node("Node1", "ubuntu:latest");
-        testNetworkOne.removeNode(nodeOne);
+    void testRemoveDeviceNotInNetwork() {
+        Device DeviceOne = new Device("Device1", "ubuntu:latest");
+        testNetworkOne.removeDevice(DeviceOne);
         // Should not throw an error, but the size should remain 0
-        assertEquals(0, testNetworkOne.getNodesInNetwork().size());
+        assertEquals(0, testNetworkOne.getDevicesInNetwork().size());
     }
     
     @Test

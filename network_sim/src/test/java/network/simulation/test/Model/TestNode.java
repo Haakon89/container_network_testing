@@ -1,7 +1,7 @@
 package network.simulation.test.Model;
 import org.junit.jupiter.api.Test;
 
-import network.simulation.test.Model.Nodes.Node;
+import network.simulation.test.Model.Nodes.Device;
 
 import org.junit.jupiter.api.BeforeEach;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -9,11 +9,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class TestNode {
     private String nodeName = "Node1";
     private String baseImage = "ubuntu:latest";
-    private Node nodeOne;
+    private Device nodeOne;
     
     @BeforeEach
     void setup() {
-        nodeOne = new Node(nodeName, baseImage);
+        nodeOne = new Device(nodeName, baseImage);
     }
     
     @Test

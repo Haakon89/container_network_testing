@@ -9,6 +9,4 @@ public interface IView {
     public void saveProjectAs(String name);
     public void closeProject(String name);
     public void setController(IViewController mainController);
-    public void addNetworkToTree(String networkName);
-    public void addNodeToTree(String nodeName);
 }

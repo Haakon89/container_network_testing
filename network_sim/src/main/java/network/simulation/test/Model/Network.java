@@ -2,26 +2,26 @@ package network.simulation.test.Model;
 
 import java.util.ArrayList;
 
-import network.simulation.test.Model.Nodes.Node;
+import network.simulation.test.Model.Nodes.Device;
 
 public class Network {
 
     private String name;
     private String adressRange;
     private int capacity;
-    private ArrayList<Node> nodesInNetwork;
+    private ArrayList<Device> devicesInNetwork;
 
     public Network(String name, String adressRange) {
         this.name = name;
         this.adressRange = adressRange;
         this.capacity = 0;
-        this.nodesInNetwork = new ArrayList<>();
+        this.devicesInNetwork = new ArrayList<>();
         generateCapacity(adressRange);
     }
     
-    public void addNode(Node node) {
+    public void addDevice(Device device) {
         if (this.capacity > 0) {
-            this.nodesInNetwork.add(node);
+            this.devicesInNetwork.add(device);
             this.capacity--;
         }
         else {
@@ -29,11 +29,11 @@ public class Network {
         }
     } 
     
-    public void removeNode(Node node) {
-        if (this.nodesInNetwork.remove(node)) {
+    public void removeDevice(Device device) {
+        if (this.devicesInNetwork.remove(device)) {
             this.capacity++;
         } else {
-            System.out.println("Node not found in " + this.name);
+            System.out.println("Device not found in " + this.name);
         }
     }
     
@@ -70,8 +70,8 @@ public class Network {
         return this.capacity;
     }
 
-    public ArrayList<Node> getNodesInNetwork() {
-        return this.nodesInNetwork;
+    public ArrayList<Device> getDevicesInNetwork() {
+        return this.devicesInNetwork;
     }
 
     
