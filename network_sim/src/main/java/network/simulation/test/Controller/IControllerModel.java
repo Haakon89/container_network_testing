@@ -1,5 +1,5 @@
 package network.simulation.test.Controller;
 
-public interface IModelController {
+public interface IControllerModel {
 
 }

@@ -8,7 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
-public class Test_Network {
+public class TestNetwork {
     private final int NETONECAP = 254;
     private final int NETTWOCAP = 65534;
     private final int NETTHREECAP = 1;

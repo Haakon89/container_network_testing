@@ -4,17 +4,18 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import network.simulation.test.Model.IModel;
+import network.simulation.test.Model.IModelController;
 import network.simulation.test.View.IView;
 
-public class MainController implements IViewController, IModelController {
+public class MainController implements IViewController, IControllerModel {
     private IView view;
-    private IModel model;
+    private IModelController model;
     private final Map<String, Consumer<String[]>> actionMap = new HashMap<>();
     
-    public MainController(IModel model, IView view) {
+    public MainController(IModelController model, IView view) {
+        this.model = model;
         this.view = view;
-
+    
         actionMap.put("newProject", args -> view.newProject(args[0]));
         actionMap.put("openProject", args -> view.openProject(args[0]));
         actionMap.put("saveProject", args -> view.saveProject(args[0]));

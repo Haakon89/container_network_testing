@@ -218,7 +218,7 @@ public class MainView implements IView {
         networkItems.clear();
 
         // Networks
-        for (String name : model.getNetworks()) {
+        for (String name : model.getNetworkNames()) {
             ArrayList<Device> devices = model.getDevicesInNetwork(name);
 
             TreeItem<String> networkItem = new TreeItem<>("Network: " + name);
@@ -243,7 +243,7 @@ public class MainView implements IView {
         MenuItem delete = new MenuItem("Delete Device");
         MenuItem edit = new MenuItem("Edit Device");
         MenuItem addToNetwork = new MenuItem("Add to Network");
-        delete.setOnAction(e -> controller.onClick("deleteDevice", deviceItem.getValue()));
+        delete.setOnAction(e -> handleDeleteDevice(deviceItem));
         edit.setOnAction(e -> handleEditDevice(deviceItem));
         addToNetwork.setOnAction(e -> handleAddToNetwork(deviceItem));
 
@@ -263,7 +263,7 @@ public class MainView implements IView {
     }
 
     private void handleAddToNetwork(TreeItem<String> deviceItem) {
-        List<String> networks = model.getNetworks();
+        List<String> networks = model.getNetworkNames();
         ChoiceDialog<String> dialog = new ChoiceDialog<>(networks.get(0), networks);
         dialog.setTitle("Assign to Network");
         dialog.setHeaderText("Choose a network:");
@@ -272,6 +272,27 @@ public class MainView implements IView {
             controller.onClick("assignDeviceToNetwork", deviceItem.getValue(), network);
             updateDisplay();
         });
+    }
+
+    private void handleDeleteDevice(TreeItem<String> deviceItem) {
+        String deviceName = deviceItem.getValue();
+        for (Device device : model.getUnassignedDevices()) {
+            if (device.getName().equals(deviceName)) {
+                controller.onClick("deleteDevice", deviceName, "unassigned");
+                updateDisplay();
+                return;
+            }
+        }
+        ArrayList<String> networkNames = model.getNetworkNames();
+        for (String name : networkNames) {
+            for (Device device : model.getDevicesInNetwork(name)) {
+                if (device.getName().equals(deviceName)) {
+                    controller.onClick("deleteDevice", deviceName, name);
+                    updateDisplay();
+                    return;
+                }
+            }
+        }
     }
 
     @Override

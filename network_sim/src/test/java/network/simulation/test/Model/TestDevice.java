@@ -6,7 +6,7 @@ import network.simulation.test.Model.Nodes.Device;
 import org.junit.jupiter.api.BeforeEach;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestNode {
+public class TestDevice {
     private String nodeName = "Node1";
     private String baseImage = "ubuntu:latest";
     private Device nodeOne;
