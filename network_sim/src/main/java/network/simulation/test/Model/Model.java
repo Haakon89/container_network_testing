@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import network.simulation.test.Model.Nodes.Device;
+import network.simulation.test.UtilityClasses.Tuple;
 
 public class Model implements IModelView, IModelController {
 
@@ -130,6 +131,20 @@ public class Model implements IModelView, IModelController {
         // Implementation for writing Dockerfile
     }
     
-
+    public String findDevice(String name) {
+        for (Device device : unassignedDevices) {
+            if (device.getName().equals(name)) {
+                return "unassigned";
+            }
+        }
+        for (Network network : networks.values()) {
+            for (Device device : network.getDevicesInNetwork()) {
+                if (device.getName().equals(name)) {
+                    return network.getName();
+                }
+            }
+        }
+        return null; // Device not found
+    }
 
 }

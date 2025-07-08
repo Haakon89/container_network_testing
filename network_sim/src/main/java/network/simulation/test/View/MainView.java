@@ -11,6 +11,7 @@ import javafx.util.Pair;
 import network.simulation.test.Controller.IViewController;
 import network.simulation.test.Model.Model;
 import network.simulation.test.Model.Nodes.Device;
+import network.simulation.test.UtilityClasses.Tuple;
 
 public class MainView implements IView {
     private final BorderPane root;
@@ -250,15 +251,78 @@ public class MainView implements IView {
         return new ContextMenu(delete, addToNetwork, edit);
     }
 
-    private void handleEditDevice(TreeItem<String> deviceItem) {
-        TextInputDialog dialog = new TextInputDialog(deviceItem.getValue());
-        dialog.setTitle("Edit Device");
-        dialog.setHeaderText("Rename Device");
-        dialog.setContentText("New name:");
+    public class DeviceEditResult {
+        private final String name, ip, os, services;
+    
+        public DeviceEditResult(String name, String ip, String os, String services) {
+            this.name = name;
+            this.ip = ip;
+            this.os = os;
+            this.services = services;
+        }
+    
+        public String getName() { return name; }
+        public String getIp() { return ip; }
+        public String getOs() { return os; }
+        public String getServices() { return services; }
+    }
 
-        dialog.showAndWait().ifPresent(newName -> {
-            controller.onClick("editDevice", deviceItem.getValue(), newName);
-            deviceItem.setValue(newName);
+    private void handleEditDevice(TreeItem<String> deviceItem) {
+        Dialog<DeviceEditResult> dialog = new Dialog<>();
+        dialog.setTitle("Edit Device");
+        dialog.setHeaderText("Edit device details");
+
+        ButtonType saveButtonType = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
+
+        // Create input fields
+        TextField nameField = new TextField(deviceItem.getValue());
+        TextField ipField = new TextField();
+        TextField osField = new TextField();
+        TextField servicesField = new TextField();
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 150, 10, 10));
+
+        grid.add(new Label("Device name:"), 0, 0);
+        grid.add(nameField, 1, 0);
+        grid.add(new Label("IP address:"), 0, 1);
+        grid.add(ipField, 1, 1);
+        grid.add(new Label("Operating System:"), 0, 2);
+        grid.add(osField, 1, 2);
+        grid.add(new Label("Services (comma-separated):"), 0, 3);
+        grid.add(servicesField, 1, 3);
+
+        dialog.getDialogPane().setContent(grid);
+
+        Platform.runLater(nameField::requestFocus);
+
+        // Convert result when Save is pressed
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == saveButtonType) {
+                return new DeviceEditResult(
+                    nameField.getText(),
+                    ipField.getText(),
+                    osField.getText(),
+                    servicesField.getText()
+                );
+            }
+            return null;
+        });
+
+        Optional<DeviceEditResult> result = dialog.showAndWait();
+
+        result.ifPresent(edited -> {
+            controller.onClick("editDevice",
+                deviceItem.getValue(), // old name
+                edited.getName(),      // new name
+                edited.getIp(),
+                edited.getOs(),
+                edited.getServices()
+            );
+            updateDisplay();
         });
     }
 
@@ -276,23 +340,9 @@ public class MainView implements IView {
 
     private void handleDeleteDevice(TreeItem<String> deviceItem) {
         String deviceName = deviceItem.getValue();
-        for (Device device : model.getUnassignedDevices()) {
-            if (device.getName().equals(deviceName)) {
-                controller.onClick("deleteDevice", deviceName, "unassigned");
-                updateDisplay();
-                return;
-            }
-        }
-        ArrayList<String> networkNames = model.getNetworkNames();
-        for (String name : networkNames) {
-            for (Device device : model.getDevicesInNetwork(name)) {
-                if (device.getName().equals(deviceName)) {
-                    controller.onClick("deleteDevice", deviceName, name);
-                    updateDisplay();
-                    return;
-                }
-            }
-        }
+        String deviceHome = model.findDevice(deviceName);
+        controller.onClick("deleteDevice", deviceName, deviceHome);
+        updateDisplay();
     }
 
     @Override
