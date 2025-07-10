@@ -55,6 +55,49 @@ public class TestController {
         assertEquals(customNetworkName, newNetworkName);
     }
 
+    @Test
+    void testOnClickAddStandardDevice() {
+        int initialDeviceCount = model.getUnassignedDevices().size();
+        assertEquals(0, initialDeviceCount);
+        controller.onClick("addStandardDevice", standardNetworkName);
+        int newDeviceCount = model.getUnassignedDevices().size();
+        assertEquals(initialDeviceCount + 1, newDeviceCount);
+        String newDeviceName = model.getUnassignedDevices().get(0).getName();
+        assertEquals(standardDeviceName, newDeviceName);
+    }
+
+    @Test
+    void testOnClickAddCustomDevice() {
+        int initialDeviceCount = model.getUnassignedDevices().size();
+        assertEquals(0, initialDeviceCount);
+        controller.onClick("addCustomDevice", customDeviceName, customNetworkName);
+        int newDeviceCount = model.getUnassignedDevices().size();
+        assertEquals(initialDeviceCount + 1, newDeviceCount);
+        String newDeviceName = model.getUnassignedDevices().get(0).getName();
+        assertEquals(customDeviceName, newDeviceName);
+    }
+    /*
+    @Test
+    void testOnClickRemoveNetwork() {
+        controller.onClick("addStandardNetwork");
+        int initialNetworkCount = model.getNetworkNames().size();
+        assertEquals(1, initialNetworkCount);
+        controller.onClick("removeNetwork", standardNetworkName);
+        int newNetworkCount = model.getNetworkNames().size();
+        assertEquals(initialNetworkCount - 1, newNetworkCount);
+    }
+
+    @Test
+    void testOnClickRemoveDevice() {
+        controller.onClick("addStandardDevice", standardNetworkName);
+        int initialDeviceCount = model.getUnassignedDevices().size();
+        assertEquals(1, initialDeviceCount);
+        String deviceName = model.getUnassignedDevices().get(0).getName();
+        controller.onClick("removeDevice", deviceName);
+        int newDeviceCount = model.getUnassignedDevices().size();
+        assertEquals(initialDeviceCount - 1, newDeviceCount);
+    }
+    */
     private static class DummyView implements IView {
         Model model;
         public DummyView(Model model) {
