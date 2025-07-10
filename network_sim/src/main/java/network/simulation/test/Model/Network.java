@@ -1,6 +1,8 @@
 package network.simulation.test.Model;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.List;
 
 import network.simulation.test.Model.Nodes.Device;
 
@@ -9,19 +11,25 @@ public class Network {
     private String name;
     private String adressRange;
     private int capacity;
+    private String gatewayAddress;
     private ArrayList<Device> devicesInNetwork;
+    private ArrayList<String> reusableIPAddresses;
 
     public Network(String name, String adressRange) {
         this.name = name;
         this.adressRange = adressRange;
         this.capacity = 0;
         this.devicesInNetwork = new ArrayList<>();
+        this.reusableIPAddresses = new ArrayList<>();
         generateCapacity(adressRange);
+        this.gatewayAddress = generateIPAddress();
     }
     
     public void addDevice(Device device) {
-        if (this.capacity > 0) {
+        if (checkCapacity()) {
             this.devicesInNetwork.add(device);
+            device.setIpAddress(generateIPAddress());
+            System.out.println(device.getIpAddress());
             this.capacity--;
         }
         else {
@@ -32,6 +40,7 @@ public class Network {
     public void removeDevice(Device device) {
         if (this.devicesInNetwork.remove(device)) {
             this.capacity++;
+            this.reusableIPAddresses.add(device.getIpAddress());
         } else {
             System.out.println("Device not found in " + this.name);
         }
@@ -58,6 +67,23 @@ public class Network {
         }
     }
 
+    private String generateIPAddress() {
+        if (this.reusableIPAddresses.size() > 0) {
+            return this.reusableIPAddresses.remove(0);
+        }
+        int deviceNumber = this.devicesInNetwork.size() + 1;
+        String range = this.adressRange.split("/")[0];
+        String ipAddress = range.substring(0, range.length() - 1) + String.valueOf(deviceNumber);
+        return ipAddress;
+    }
+
+    private boolean checkCapacity() {
+        if (this.capacity <= 0) {
+            return false;
+        }
+        return true;
+    }
+
     public String getName() {
         return this.name;
     }
@@ -74,5 +100,36 @@ public class Network {
         return this.devicesInNetwork;
     }
 
+    public String getGateway() {
+        return this.gatewayAddress;
+    }
+
+    public String getComposeInfo() {
+        StringBuilder sb = new StringBuilder();
+        for (Device device : this.devicesInNetwork) {
+            device.writeDockerfileToFile(Paths.get("network_sim/src/main/resources/Docker/"));
+            sb.append("  ").append(device.getName()).append(":\n");
+            sb.append("    container_name: ").append(device.getName()).append("\n");
+            /*
+            if (device.getStartupCommand() != null && !device.getStartupCommand().isBlank()) {
+                sb.append("    command: ").append(device.getStartupCommand()).append("\n");
+            }
+
+            List<Integer> ports = device.getExposedPorts();
+            if (ports != null && !ports.isEmpty()) {
+                sb.append("    ports:\n");
+                for (int port : ports) {
+                    sb.append("      - \"").append(port).append(":").append(port).append("\"\n");
+                }
+            }
+            */
+            sb.append("    networks:\n");
+            sb.append("      ").append(this.name).append(":\n");
+            sb.append("        ipv4_address: ").append(device.getIpAddress()).append("\n\n");
+        }
+
+        return sb.toString();
+    }
+    
     
 }

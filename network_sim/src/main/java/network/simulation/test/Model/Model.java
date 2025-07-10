@@ -1,10 +1,15 @@
 package network.simulation.test.Model;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import network.simulation.test.Model.Nodes.CustomDevice;
 import network.simulation.test.Model.Nodes.Device;
-import network.simulation.test.UtilityClasses.Tuple;
+import network.simulation.test.Model.Nodes.StandardDevice;
 
 public class Model implements IModelView, IModelController {
 
@@ -12,12 +17,14 @@ public class Model implements IModelView, IModelController {
     HashMap<String, Network> networks;
     ArrayList<String> networkNames;
     ArrayList<Device> unassignedDevices;
+    int devicesCreated;
 
     public Model() {
         this.name = "";
         this.networks = new HashMap<>();
         this.networkNames = new ArrayList<>();
         this.unassignedDevices = new ArrayList<>();
+        devicesCreated = 0;
     }
     
     public void setName(String name) {
@@ -41,7 +48,7 @@ public class Model implements IModelView, IModelController {
     public void addStandardNetwork() {
         String number = String.valueOf(networks.size() + 1);
         String name = "Network" + number;
-        String adressRange = "192.168." + number + ".0/24"; // Default address range for standard networks
+        String adressRange = "192.168.100.0/24";
         Network network = new Network(name, adressRange);
         this.networks.put(name, network);
         this.networkNames.add(name);
@@ -51,19 +58,18 @@ public class Model implements IModelView, IModelController {
 
     @Override
     public void createDevice(String name, String baseImage) {
-        Device device = new Device(name, baseImage);
+        Device device = new CustomDevice(name, baseImage);
         this.unassignedDevices.add(device);
+        this.devicesCreated++;
     }
 
     @Override
     public void addStandardDevice() {
-        String number = String.valueOf(unassignedDevices.size() + 1);
+        this.devicesCreated++;
+        String number = String.valueOf(devicesCreated);
         String name = "Device" + number;
-        String baseImage = "ubuntu:latest"; // Default base image for standard devices
-        Device device = new Device(name, baseImage);
+        Device device = new StandardDevice(name);
         this.unassignedDevices.add(device);
-        System.out.println("Device " + name + " created.");
-        System.out.println("Available unassigned devices: " + this.unassignedDevices);
     }
     
     @Override
@@ -145,6 +151,36 @@ public class Model implements IModelView, IModelController {
             }
         }
         return null; // Device not found
+    }
+
+    public void generateDockerCompose(Path path) {
+        StringBuilder compose = new StringBuilder();
+        compose.append("version '3.9':\n\nservices:\n");
+
+        for (Network network : networks.values()) {
+            compose.append(network.getComposeInfo());
+        }
+
+        compose.append("networks:\n");
+
+        for (Network network : networks.values()) {
+            compose.append("  ").append(network.getName()).append(":\n");
+            compose.append("    driver: bridge\n");
+            compose.append("    ipam:\n");
+            compose.append("      config:\n");
+            compose.append("        - subnet: ").append(network.getAdressRange()).append("\n");
+            compose.append("          gateway: ").append(network.getGateway()).append("\n");
+        }
+
+        try {
+            Files.writeString(path, compose.toString());
+        } catch (IOException e) {
+            System.err.println("Error writing docker-compose.yml: " + e.getMessage());
+        }
+    }
+    @Override
+    public void buildProject() {
+        generateDockerCompose(Paths.get("network_sim/src/main/resources/Docker/docker-compose.yml"));
     }
 
 }

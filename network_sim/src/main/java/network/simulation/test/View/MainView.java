@@ -38,11 +38,13 @@ public class MainView implements IView {
 
         Button addNetworkBtn = new Button("Add Network");
         Button addDeviceBtn = new Button("Add Device");
+        Button buildProjectBtn = new Button("Build");
 
         addNetworkBtn.setOnAction(e -> handleAddNetwork());
         addDeviceBtn.setOnAction(e -> handleAddDevice());
+        buildProjectBtn.setOnAction(e -> handleBuildProject());
 
-        VBox treeWithButtons = new VBox(projectTree, addNetworkBtn, addDeviceBtn);
+        VBox treeWithButtons = new VBox(projectTree, addNetworkBtn, addDeviceBtn, buildProjectBtn);
         treeWithButtons.setPadding(new Insets(10));
         treeWithButtons.setSpacing(5);
 
@@ -166,6 +168,10 @@ public class MainView implements IView {
             }
         });
         updateDisplay();
+    }
+
+    private void handleBuildProject() {
+        controller.onClick("buildProject");
     }
 
     private void createMenuBar(VBox top) {

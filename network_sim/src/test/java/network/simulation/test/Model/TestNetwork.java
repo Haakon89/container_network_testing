@@ -3,6 +3,7 @@ package network.simulation.test.Model;
 import org.junit.jupiter.api.Test;
 
 import network.simulation.test.Model.Nodes.Device;
+import network.simulation.test.Model.Nodes.StandardDevice;
 
 import org.junit.jupiter.api.BeforeEach;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -38,7 +39,7 @@ public class TestNetwork {
 
     @Test
     void testAddDevice() {
-        Device deviceOne = new Device("device1", "ubuntu:latest");
+        Device deviceOne = new StandardDevice("device1");
         int numberOFDevicesAtInitialization = 0;
         assertEquals(numberOFDevicesAtInitialization, testNetworkOne.getDevicesInNetwork().size());
         testNetworkOne.addDevice(deviceOne);
@@ -49,13 +50,13 @@ public class TestNetwork {
     @Test
     void testAddDeviceToFullNetwork() {
         for (int i = 0; i < NETONECAP; i++) {
-            Device Device = new Device("Device" + i, "ubuntu:latest");
+            Device Device = new StandardDevice("Device" + i);
             testNetworkOne.addDevice(Device);
         }
         int numberOfDevicesAtFullCapacity = NETONECAP;
         assertEquals(numberOfDevicesAtFullCapacity, testNetworkOne.getDevicesInNetwork().size());
         
-        Device extraDevice = new Device("ExtraDevice", "ubuntu:latest");
+        Device extraDevice = new StandardDevice("ExtraDevice");
         testNetworkOne.addDevice(extraDevice);
         // Should not add the extra Device since the network is full
         assertEquals(numberOfDevicesAtFullCapacity, testNetworkOne.getDevicesInNetwork().size());
@@ -63,7 +64,7 @@ public class TestNetwork {
 
     @Test
     void testRemoveDevice() {
-        Device DeviceOne = new Device("Device1", "ubuntu:latest");
+        Device DeviceOne = new StandardDevice("Device1");
         testNetworkOne.addDevice(DeviceOne);
         int numberOfDevicesAfterAdding = 1;
         assertEquals(numberOfDevicesAfterAdding, testNetworkOne.getDevicesInNetwork().size());
@@ -75,7 +76,7 @@ public class TestNetwork {
 
     @Test
     void testRemoveDeviceNotInNetwork() {
-        Device DeviceOne = new Device("Device1", "ubuntu:latest");
+        Device DeviceOne = new StandardDevice("Device1");
         testNetworkOne.removeDevice(DeviceOne);
         // Should not throw an error, but the size should remain 0
         assertEquals(0, testNetworkOne.getDevicesInNetwork().size());

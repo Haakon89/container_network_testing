@@ -51,7 +51,6 @@ public class TestModel {
         model.createDevice(deviceName, baseImage);
         assertEquals(1, model.getUnassignedDevices().size());
         assertEquals(deviceName, model.getUnassignedDevices().get(0).getName());
-        assertEquals(baseImage, model.getUnassignedDevices().get(0).getBaseImage());
     }
 
     @Test

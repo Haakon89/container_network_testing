@@ -1,0 +1,22 @@
+version '3.9':
+
+services:
+  Device1:
+    container_name: Device1
+    networks:
+      Network1:
+        ipv4_address: 192.168.100.2
+
+  Device2:
+    container_name: Device2
+    networks:
+      Network1:
+        ipv4_address: 192.168.100.3
+
+networks:
+  Network1:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.100.0/24
+          gateway: 192.168.100.1

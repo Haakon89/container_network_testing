@@ -7,4 +7,5 @@ public interface IModelController {
     public void createDevice(String name, String baseImage);
     public void deleteDevice(String device, String home);
     public void assignDevice(String device, String network);
+    public void buildProject();
 }
