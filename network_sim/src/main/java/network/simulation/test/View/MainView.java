@@ -1,5 +1,6 @@
 package network.simulation.test.View;
 
+import java.nio.file.Path;
 import java.util.*;
 
 import javafx.application.Platform;
@@ -70,6 +71,12 @@ public class MainView implements IView {
         setController(controller);
     }
 
+    /**
+     * Handles adding a new device to the project.
+     * Prompts the user to choose between a standard or custom device.
+     * If standard, calls the controller to add a standard device.
+     * If custom, prompts for device details and calls the controller to add a custom device.
+     */
     private void handleAddDevice() {
         ChoiceDialog<String> choice = new ChoiceDialog<>("Standard", "Standard", "Custom");
         choice.setTitle("Add Device");
@@ -120,6 +127,12 @@ public class MainView implements IView {
         updateDisplay();
     }
 
+    /**
+     * Handles adding a new network to the project.
+     * Prompts the user to choose between a standard or custom network.
+     * If standard, calls the controller to add a standard network.
+     * If custom, prompts for network details and calls the controller to add a custom network.
+     */
     private void handleAddNetwork() {
         ChoiceDialog<String> choice = new ChoiceDialog<>("Standard", "Standard", "Custom");
         choice.setTitle("Add Network");
@@ -170,6 +183,10 @@ public class MainView implements IView {
         updateDisplay();
     }
 
+    /**
+     * Handles building the project.
+     * Calls the controller to perform the build action which generates Dockerfiles for the devices and a docker-compose.
+     */
     private void handleBuildProject() {
         controller.onClick("buildProject");
     }
@@ -220,6 +237,12 @@ public class MainView implements IView {
         updateDisplay();
     }
 
+    /**
+     * Updates the display of the project tree view.
+     * Clears the current items and repopulates it with networks and devices.
+     * It creates a tree structure where each network is a parent item containing its devices as children.
+     * Additionally, it includes an "Unassigned Devices" section for devices not assigned to any network.
+     */
     private void updateDisplay() {
         rootItem.getChildren().clear();
         networkItems.clear();
@@ -257,6 +280,10 @@ public class MainView implements IView {
         return new ContextMenu(delete, addToNetwork, edit);
     }
 
+    /**
+     * Result class for the device edit dialog.
+     * Contains the edited device details such as name, IP, OS, and services.
+     */
     public class DeviceEditResult {
         private final String name, ip, os, services;
     
@@ -273,6 +300,13 @@ public class MainView implements IView {
         public String getServices() { return services; }
     }
 
+    /**
+     * Handles editing a device.
+     * Opens a dialog to edit the device details such as name, IP, OS, and services.
+     * On saving, it calls the controller to update the device and refreshes the display.
+     *
+     * @param deviceItem The TreeItem representing the device to be edited.
+     */
     private void handleEditDevice(TreeItem<String> deviceItem) {
         Dialog<DeviceEditResult> dialog = new Dialog<>();
         dialog.setTitle("Edit Device");
@@ -332,6 +366,13 @@ public class MainView implements IView {
         });
     }
 
+    /**
+     * Handles adding a device to a network.
+     * Prompts the user to choose a network from the available networks.
+     * On selection, it calls the controller to assign the device to the selected network and refreshes the display.
+     *
+     * @param deviceItem The TreeItem representing the device to be added to a network.
+     */
     private void handleAddToNetwork(TreeItem<String> deviceItem) {
         List<String> networks = model.getNetworkNames();
         ChoiceDialog<String> dialog = new ChoiceDialog<>(networks.get(0), networks);
@@ -344,6 +385,12 @@ public class MainView implements IView {
         });
     }
 
+    /**
+     * Handles deleting a device from the project.
+     * Calls the controller to delete the device and refreshes the display.
+     *
+     * @param deviceItem The TreeItem representing the device to be deleted.
+     */
     private void handleDeleteDevice(TreeItem<String> deviceItem) {
         String deviceName = deviceItem.getValue();
         String deviceHome = model.findDevice(deviceName);
@@ -352,25 +399,25 @@ public class MainView implements IView {
     }
 
     @Override
-    public void openProject(String name) {
+    public void openProject(Path path) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'openProject'");
     }
 
     @Override
-    public void saveProject(String name) {
+    public void saveProject() {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'saveProject'");
     }
 
     @Override
-    public void saveProjectAs(String name) {
+    public void saveProjectAs(String name, Path path) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'saveProjectAs'");
     }
 
     @Override
-    public void closeProject(String name) {
+    public void closeProject() {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'closeProject'");
     }

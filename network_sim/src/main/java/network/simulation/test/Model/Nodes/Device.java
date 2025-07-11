@@ -35,6 +35,9 @@ public abstract class Device {
         return ipAddress;
     }
     
+    /**
+     * Takes in a service and adds it to the list of services the device should have
+     */
     public void installService(String service) {
         if (!services.contains(service)) {
             services.add(service);
@@ -44,6 +47,9 @@ public abstract class Device {
         }
     }
 
+    /**
+     * Takes in a package and adds it to the list of packages the device should have
+     */
     public void installPackage(String pkg) { 
         if (!packages.contains(pkg)) {
             packages.add(pkg);
@@ -68,7 +74,17 @@ public abstract class Device {
     public void setRunning(boolean isRunning) {
         this.isRunning = isRunning;
     }
+
+    /**
+     * Generates a Dockerfile for the device based on its services and packages.
+     * @return the Dockerfile content as a String
+     */
     public abstract String generateDockerfile();
+
+    /**
+     * Writes the Dockerfile content to a file at the specified path.
+     * @param filepath the path where the Dockerfile should be written
+     */
     public abstract void writeDockerfileToFile(Path filepath);
     public abstract void start();
     public abstract void stop();

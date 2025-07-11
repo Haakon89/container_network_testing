@@ -77,6 +77,11 @@ public class Model implements IModelView, IModelController {
         return this.networkNames;
     }
 
+    /**
+     * Returns a list of devices in a specific network.
+     * @param networkName the name of the network to search in
+     * @return an ArrayList of devices in the specified network, or an empty list if the network does not exist
+     */
     public ArrayList<Device> getDevicesInNetwork(String networkName) {
         Network network = networks.get(networkName);
         if (network != null) {
@@ -132,11 +137,13 @@ public class Model implements IModelView, IModelController {
         this.networks.get(network).addDevice(deviceToAssign);
         this.unassignedDevices.remove(deviceToAssign);
     }
-
-    public void writeDockerfile(String path) {
-        // Implementation for writing Dockerfile
-    }
     
+    /**
+     * Finds a device by its name and returns the network it belongs to.
+     * If the device is unassigned, it returns "unassigned".
+     * @param name the name of the device to find
+     * @return the name of the network the device belongs to, or "unassigned" if it is not assigned to any network
+     */
     public String findDevice(String name) {
         for (Device device : unassignedDevices) {
             if (device.getName().equals(name)) {
@@ -153,6 +160,12 @@ public class Model implements IModelView, IModelController {
         return null; // Device not found
     }
 
+    /**
+     * Generates a Docker Compose file for the current model.
+     * It includes all networks and their devices, along with their configurations.
+     * The file is written to the specified path.
+     * @param path the path where the docker-compose.yml file will be created
+     */
     public void generateDockerCompose(Path path) {
         StringBuilder compose = new StringBuilder();
         compose.append("version '3.9':\n\nservices:\n");

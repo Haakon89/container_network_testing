@@ -35,6 +35,11 @@ public class StandardDevice extends Device{
         servicePorts.put("network-manager", -1); // No public port (manages interfaces)
 
     }
+
+    /**
+     * Reads a txt file containing a list of packages and installs them on the device.
+     * @param filePath the path to the file containing the package list
+     */
     public void installPackagesFromFile(String filePath) {
         try {
             String content = Files.readString(Paths.get(filePath));
@@ -50,6 +55,10 @@ public class StandardDevice extends Device{
         }
     }
 
+    /**
+     * Reads a txt file containing a list of services and installs them on the device.
+     * @param filePath the path to the file containing the service list
+     */
     public void installServicesFromFile(String filePath) {
         try {
             String content = Files.readString(Paths.get(filePath));
@@ -64,6 +73,7 @@ public class StandardDevice extends Device{
             System.err.println("Failed to read service list " + e.getMessage());
         }
     }
+    
     @Override
     public String generateDockerfile() {
         StringBuilder dockerfile = new StringBuilder();

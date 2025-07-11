@@ -25,6 +25,10 @@ public class Network {
         this.gatewayAddress = generateIPAddress();
     }
     
+    /**
+     * Adds a device to the network if there is capacity.
+     * @param device the device to be added
+     */
     public void addDevice(Device device) {
         if (checkCapacity()) {
             this.devicesInNetwork.add(device);
@@ -37,6 +41,11 @@ public class Network {
         }
     } 
     
+
+    /**
+     * Removes a device from the network and makes its IP address reusable.
+     * @param device the device to be removed
+     */
     public void removeDevice(Device device) {
         if (this.devicesInNetwork.remove(device)) {
             this.capacity++;
@@ -46,6 +55,11 @@ public class Network {
         }
     }
     
+    /**
+     * Generates the capacity of the network based on the address range.
+     * The capacity is calculated based on the prefix length of the CIDR notation.
+     * @param range the address range in CIDR notation
+     */
     private void generateCapacity(String range) {
         try {
             String[] parts = range.split("/");
@@ -67,6 +81,12 @@ public class Network {
         }
     }
 
+    /**
+     * Generates an IP address for a device in the network.
+     * If there are reusable IP addresses, it uses one of them.
+     * Otherwise, it generates a new IP address based on the address range and the number of devices in the network.
+     * @return a new or reusable IP address
+     */
     private String generateIPAddress() {
         if (this.reusableIPAddresses.size() > 0) {
             return this.reusableIPAddresses.remove(0);
@@ -104,6 +124,11 @@ public class Network {
         return this.gatewayAddress;
     }
 
+    /**
+     * Generates a Docker Compose configuration for the network.
+     * It includes all devices in the network with their configurations.
+     * @return a string representation of the Docker Compose configuration
+     */
     public String getComposeInfo() {
         StringBuilder sb = new StringBuilder();
         for (Device device : this.devicesInNetwork) {
