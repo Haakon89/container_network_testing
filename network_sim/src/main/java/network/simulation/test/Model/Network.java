@@ -156,6 +156,19 @@ public class Network {
 
         return sb.toString();
     }
+
+    public ArrayList<String> getDisplayInfo() {
+        ArrayList<String> info = new ArrayList<>();
+        info.add("Network Name: " + this.name);
+        info.add("Address Range: " + this.adressRange);
+        info.add("Capacity: " + this.capacity);
+        info.add("Gateway Address: " + this.gatewayAddress);
+        info.add("Devices in Network:");
+        for (Device device : this.devicesInNetwork) {
+            info.add("  - " + device.getName() + " (" + device.getIpAddress() + ")");
+        }
+        return info;
+    }
     
     
 }

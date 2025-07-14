@@ -130,5 +130,17 @@ public class StandardDevice extends Device{
     public void stop() {
         setRunning(false);
     }
+
+    @Override
+    public ArrayList<String> getDisplayInfo() {
+        ArrayList<String> info = new ArrayList<>();
+        info.add("Device Name: " + getName());
+        info.add("Base Image: " + this.baseImage);
+        info.add("Running: " + isRunning());
+        info.add("Entry Point: " + isEntryPoint());
+        info.add("Installed Packages: " + String.join(", ", getPackages()));
+        info.add("Installed Services: " + String.join(", ", getServices()));
+        return info;
+    }
     
 }

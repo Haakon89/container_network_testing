@@ -10,6 +10,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.util.Pair;
 import network.simulation.test.Controller.IViewController;
+import network.simulation.test.Model.IModelView;
 import network.simulation.test.Model.Model;
 import network.simulation.test.Model.Nodes.Device;
 import network.simulation.test.UtilityClasses.Tuple;
@@ -18,12 +19,13 @@ public class MainView implements IView {
     private final BorderPane root;
     private final TreeView<String> projectTree;
     private final TreeItem<String> rootItem;
+    private final VBox detailPanel = new VBox();
     private final Map<String, TreeItem<String>> networkItems = new HashMap<>();
 
     private IViewController controller;
-    private Model model;
+    private IModelView model;
 
-    public MainView(Model model) {
+    public MainView(IModelView model) {
         this.model = model;
         root = new BorderPane();
 
@@ -35,6 +37,11 @@ public class MainView implements IView {
         rootItem.setExpanded(true);
 
         projectTree = new TreeView<>(rootItem);
+        projectTree.getSelectionModel().selectedItemProperty().addListener((obs, oldItem, newItem) -> {
+            if (newItem != null) {
+                displayDetailsFor(newItem);
+            }
+        });
         projectTree.setMinWidth(250);
 
         Button addNetworkBtn = new Button("Add Network");
@@ -68,7 +75,30 @@ public class MainView implements IView {
         });
 
         root.setLeft(treeWithButtons);
+        detailPanel.setPadding(new Insets(10));
+        detailPanel.setSpacing(10);
+        detailPanel.setPrefWidth(400);
+        root.setRight(detailPanel);
         setController(controller);
+    }
+
+    private void displayDetailsFor(TreeItem<String> selected) {
+        detailPanel.getChildren().clear();
+        String label = selected.getValue();
+        ArrayList<String> info;
+        if (label.startsWith("Network:")) {
+            info = model.getNetworkInfo(label.substring(9));
+            for (String item : info) {
+                Label detailLabel = new Label(item);
+                detailPanel.getChildren().add(detailLabel);
+            }
+        } else {
+            info = model.getDeviceInfo(label);
+            for (String item : info) {
+                Label detailLabel = new Label(item);
+                detailPanel.getChildren().add(detailLabel);
+            }
+        }
     }
 
     /**

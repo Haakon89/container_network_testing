@@ -1,6 +1,7 @@
 package network.simulation.test.Model.Nodes;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 
 public class CustomDevice extends Device {
 
@@ -31,6 +32,12 @@ public class CustomDevice extends Device {
     public void writeDockerfileToFile(Path filepath) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'writeDockerfileToFile'");
+    }
+
+    @Override
+    public ArrayList<String> getDisplayInfo() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getDisplayInfo'");
     }
 
     

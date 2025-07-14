@@ -98,6 +98,8 @@ public abstract class Device {
     public abstract void writeDockerfileToFile(Path filepath);
     public abstract void start();
     public abstract void stop();
+
+    public abstract ArrayList<String> getDisplayInfo();
 }
 
     

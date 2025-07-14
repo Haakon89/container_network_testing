@@ -15,6 +15,7 @@ public class Model implements IModelView, IModelController {
 
     String name;
     HashMap<String, Network> networks;
+    HashMap<String, Device> devices;
     ArrayList<String> networkNames;
     ArrayList<Device> unassignedDevices;
     int devicesCreated;
@@ -23,12 +24,13 @@ public class Model implements IModelView, IModelController {
     public Model() {
         this.name = "";
         this.networks = new HashMap<>();
+        this.devices = new HashMap<>();
         this.networkNames = new ArrayList<>();
         this.unassignedDevices = new ArrayList<>();
-        devicesCreated = 0;
+        this.devicesCreated = 0;
         this.path = "./";
     }
-    
+    @Override
     public void setName(String name) {
         this.name = name;
     }
@@ -59,6 +61,7 @@ public class Model implements IModelView, IModelController {
         String lowerCaseName = name.toLowerCase();
         Device device = new CustomDevice(lowerCaseName, baseImage);
         this.unassignedDevices.add(device);
+        this.devices.put(lowerCaseName, device);
         this.devicesCreated++;
     }
 
@@ -69,6 +72,7 @@ public class Model implements IModelView, IModelController {
         String name = "device" + number;
         Device device = new StandardDevice(name);
         this.unassignedDevices.add(device);
+        this.devices.put(name, device);
     }
     
     @Override
@@ -76,11 +80,7 @@ public class Model implements IModelView, IModelController {
         return this.networkNames;
     }
 
-    /**
-     * Returns a list of devices in a specific network.
-     * @param networkName the name of the network to search in
-     * @return an ArrayList of devices in the specified network, or an empty list if the network does not exist
-     */
+    @Override
     public ArrayList<Device> getDevicesInNetwork(String networkName) {
         Network network = networks.get(networkName);
         if (network != null) {
@@ -102,6 +102,7 @@ public class Model implements IModelView, IModelController {
             for (Device device : unassignedDevices) {
                 if (device.getName().equals(name)) {
                     unassignedDevices.remove(device);
+                    this.devices.remove(name);
                     return;
                 }
             }
@@ -117,6 +118,7 @@ public class Model implements IModelView, IModelController {
                 }
                 if (deviceToRemove != null) {
                     network.removeDevice(deviceToRemove);
+                    this.devices.remove(name);
                 } else {
                     System.out.println("device " + name + " not found in network " + home + ".");
                 }
@@ -137,12 +139,7 @@ public class Model implements IModelView, IModelController {
         this.unassignedDevices.remove(deviceToAssign);
     }
     
-    /**
-     * Finds a device by its name and returns the network it belongs to.
-     * If the device is unassigned, it returns "unassigned".
-     * @param name the name of the device to find
-     * @return the name of the network the device belongs to, or "unassigned" if it is not assigned to any network
-     */
+    @Override
     public String findDevice(String name) {
         for (Device device : unassignedDevices) {
             if (device.getName().equals(name)) {
@@ -193,6 +190,16 @@ public class Model implements IModelView, IModelController {
     @Override
     public void buildProject() {
         generateDockerCompose(Paths.get("network_sim/src/main/resources/Docker/docker-compose.yml"));
+    }
+    @Override
+    public ArrayList<String> getNetworkInfo(String name) {
+        Network network = networks.get(name);
+        return network.getDisplayInfo();
+    }
+    @Override
+    public ArrayList<String> getDeviceInfo(String name) {
+        Device device = devices.get(name);
+        return device.getDisplayInfo();
     }
 
 }
