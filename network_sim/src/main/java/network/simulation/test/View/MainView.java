@@ -399,7 +399,7 @@ public class MainView implements IView {
     }
 
     @Override
-    public void openProject(Path path) {
+    public void openProject(String path) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'openProject'");
     }
@@ -411,7 +411,7 @@ public class MainView implements IView {
     }
 
     @Override
-    public void saveProjectAs(String name, Path path) {
+    public void saveProjectAs(String name, String path) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'saveProjectAs'");
     }

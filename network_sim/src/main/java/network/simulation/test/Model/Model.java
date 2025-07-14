@@ -18,6 +18,7 @@ public class Model implements IModelView, IModelController {
     ArrayList<String> networkNames;
     ArrayList<Device> unassignedDevices;
     int devicesCreated;
+    String path;
 
     public Model() {
         this.name = "";
@@ -25,6 +26,7 @@ public class Model implements IModelView, IModelController {
         this.networkNames = new ArrayList<>();
         this.unassignedDevices = new ArrayList<>();
         devicesCreated = 0;
+        this.path = "./";
     }
     
     public void setName(String name) {
@@ -40,25 +42,22 @@ public class Model implements IModelView, IModelController {
         Network network = new Network(name, adressRange);
         this.networks.put(name, network);
         this.networkNames.add(name);
-        System.out.println("Network " + name + " created with address range " + adressRange);
-        System.out.println("Available networks: " + networks.keySet());
     }
 
     @Override
     public void addStandardNetwork() {
         String number = String.valueOf(networks.size() + 1);
-        String name = "Network" + number;
+        String name = "network" + number;
         String adressRange = "192.168.100.0/24";
         Network network = new Network(name, adressRange);
         this.networks.put(name, network);
         this.networkNames.add(name);
-        System.out.println("Network " + name + " created with address range " + adressRange);
-        System.out.println("Available networks: " + networks.keySet());
     }
 
     @Override
     public void createDevice(String name, String baseImage) {
-        Device device = new CustomDevice(name, baseImage);
+        String lowerCaseName = name.toLowerCase();
+        Device device = new CustomDevice(lowerCaseName, baseImage);
         this.unassignedDevices.add(device);
         this.devicesCreated++;
     }
@@ -67,7 +66,7 @@ public class Model implements IModelView, IModelController {
     public void addStandardDevice() {
         this.devicesCreated++;
         String number = String.valueOf(devicesCreated);
-        String name = "Device" + number;
+        String name = "device" + number;
         Device device = new StandardDevice(name);
         this.unassignedDevices.add(device);
     }
@@ -168,7 +167,7 @@ public class Model implements IModelView, IModelController {
      */
     public void generateDockerCompose(Path path) {
         StringBuilder compose = new StringBuilder();
-        compose.append("version '3.9':\n\nservices:\n");
+        compose.append("services:\n");
 
         for (Network network : networks.values()) {
             compose.append(network.getComposeInfo());

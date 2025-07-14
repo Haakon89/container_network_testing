@@ -99,6 +99,12 @@ public class StandardDevice extends Device{
                 }
             }
         }
+        dockerfile.append("\n");
+        if (isEntryPoint) {
+            dockerfile.append("CMD [\"/bin/bash\"]\n");
+        } else {
+            dockerfile.append("CMD [\"tail\", \"-f\", \"/dev/null\"]\n");
+        }
         return dockerfile.toString();
     }
     @Override

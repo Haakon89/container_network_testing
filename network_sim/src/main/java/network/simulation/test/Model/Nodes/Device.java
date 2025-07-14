@@ -9,6 +9,7 @@ public abstract class Device {
     protected ArrayList<String> services;
     private ArrayList<String> packages;
     protected boolean isRunning;
+    protected boolean isEntryPoint;
     protected String ipAddress; 
 
     public Device(String name) {
@@ -17,6 +18,7 @@ public abstract class Device {
         this.services = new ArrayList<>();
         this.packages = new ArrayList<>();
         this.isRunning = false;
+        this.isEntryPoint = false;
     }
 
     public void setName(String name) {
@@ -73,6 +75,14 @@ public abstract class Device {
 
     public void setRunning(boolean isRunning) {
         this.isRunning = isRunning;
+    }
+
+    public boolean isEntryPoint() {
+        return isEntryPoint;
+    }
+
+    public void setEntryPoint(boolean isEntryPoint) {
+        this.isEntryPoint = isEntryPoint;
     }
 
     /**

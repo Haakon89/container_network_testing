@@ -16,7 +16,7 @@ public interface IView {
      * Opens an existing project from the specified path.
      * @param path the path to the project file
      */
-    public void openProject(Path path);
+    public void openProject(String path);
 
     /**
      * Saves the current project to its current location.
@@ -28,7 +28,7 @@ public interface IView {
      * @param name the new name for the project
      * @param path the new path where the project will be saved
      */
-    public void saveProjectAs(String name, Path path);
+    public void saveProjectAs(String name, String path);
 
     /**
      * Closes the current project.

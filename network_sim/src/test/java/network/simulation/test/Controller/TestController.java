@@ -11,10 +11,10 @@ import network.simulation.test.View.IView;
 public class TestController {
     String projectName = "TestProject";
     String customNetworkName = "CustomNetwork";
-    String customDeviceName = "CustomDevice";
-    String standardNetworkName = "Network1";
+    String customDeviceName = "customdevice";
+    String standardNetworkName = "network1";
     String customNetworkAddress = "192.168.1.0/24";
-    String standardDeviceName = "Device1";
+    String standardDeviceName = "device1";
     Model model;
     IView view;
     MainController controller;
@@ -110,9 +110,9 @@ public class TestController {
             //updateDisplay();
         }
         @Override public void openProject(String name) {}
-        @Override public void saveProject(String name) {}
-        @Override public void saveProjectAs(String name) {}
-        @Override public void closeProject(String name) {}
+        @Override public void saveProject() {}
+        @Override public void saveProjectAs(String name, String path) {}
+        @Override public void closeProject() {}
         @Override public void setController(IViewController controller) {}
     }
 }

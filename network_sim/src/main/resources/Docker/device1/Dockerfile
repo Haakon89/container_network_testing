@@ -27,3 +27,5 @@ EXPOSE 123
 EXPOSE 514
 EXPOSE 631
 EXPOSE 5353
+
+CMD ["tail", "-f", "/dev/null"]

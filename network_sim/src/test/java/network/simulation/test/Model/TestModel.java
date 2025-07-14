@@ -11,10 +11,10 @@ public class TestModel {
     String MODELNAME = "TestModel";
     String CUSTOMNETWORKNAME = "CustomNetwork";
     String CUSTOMNETWORKADDRESS = "192.168.0.0/24";
-    String STANDARDNETWORKNAMEONE = "Network1";
-    String STANDARDNETWORKNAMETWO = "Network2";
-    String STANDARDDEVICENAMEONE = "Device1";
-    String STANDARDDEVICENAMETWO = "Device2";
+    String STANDARDNETWORKNAMEONE = "network1";
+    String STANDARDNETWORKNAMETWO = "network2";
+    String STANDARDDEVICENAMEONE = "device1";
+    String STANDARDDEVICENAMETWO = "device2";
 
     @BeforeEach
     void setup() {
@@ -41,12 +41,12 @@ public class TestModel {
         model.addStandardNetwork();
         assertEquals(initialNetworkCount + 1, model.getNetworkNames().size());
         String newNetworkName = model.getNetworkNames().get(initialNetworkCount);
-        assertEquals("Network" + (initialNetworkCount + 1), newNetworkName);
+        assertEquals("network" + (initialNetworkCount + 1), newNetworkName);
     }
 
     @Test  
     void testCreateDevice() {
-        String deviceName = "TestDevice";
+        String deviceName = "testdevice";
         String baseImage = "ubuntu:latest";
         model.createDevice(deviceName, baseImage);
         assertEquals(1, model.getUnassignedDevices().size());
