@@ -3,7 +3,6 @@ package network.simulation.test.Model;
 import java.util.List;
 
 import network.simulation.test.Model.Nodes.Device;
-import network.simulation.test.View.RunPane;
 
 public interface IModelController {
 

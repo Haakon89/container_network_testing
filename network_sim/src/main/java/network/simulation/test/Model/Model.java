@@ -7,11 +7,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import javafx.concurrent.Task;
 import network.simulation.test.Model.Nodes.CustomDevice;
 import network.simulation.test.Model.Nodes.Device;
 import network.simulation.test.Model.Nodes.StandardDevice;
-import network.simulation.test.View.RunPane;
 
 public class Model implements IModelView, IModelController {
 

@@ -1,9 +1,6 @@
 package network.simulation.test.Model;
 
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.List;
-
 import network.simulation.test.Model.Nodes.Device;
 
 public class Network {

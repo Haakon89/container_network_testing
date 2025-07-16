@@ -1,7 +1,5 @@
 package network.simulation.test.Controller;
 
-import network.simulation.test.View.RunPane;
-
 public interface IControllerView {
     /**
      * Handles click events from the view.

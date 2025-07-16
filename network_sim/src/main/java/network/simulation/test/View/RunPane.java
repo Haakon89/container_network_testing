@@ -1,5 +1,6 @@
 package network.simulation.test.View;
 
+import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
@@ -8,21 +9,24 @@ import javafx.scene.layout.VBox;
 
 public class RunPane extends VBox {
     private ProgressBar progressBar;
+    private final Label statusLabel;
     private TextArea outputArea;
 
     public RunPane() {
-        setPadding(new Insets(10));
         setSpacing(10);
+        setPadding(new Insets(10));
 
-        Label title = new Label("Running Docker Setup...");
+        statusLabel = new Label("Building Docker Environment...");
+
         progressBar = new ProgressBar();
         progressBar.setPrefWidth(400);
+        progressBar.setProgress(ProgressBar.INDETERMINATE_PROGRESS); // Spinner-style
 
         outputArea = new TextArea();
         outputArea.setEditable(false);
         outputArea.setPrefHeight(300);
 
-        getChildren().addAll(title, progressBar, outputArea);
+        getChildren().addAll(statusLabel, progressBar, outputArea);
     }
 
     public void appendLog(String text) {
@@ -31,6 +35,20 @@ public class RunPane extends VBox {
 
     public void setProgress(double progress) {
         progressBar.setProgress(progress);
+    }
+
+    public void bindToTask(Task<Void> task) {
+        progressBar.progressProperty().bind(task.progressProperty());
+    }
+
+    public void markComplete() {
+        progressBar.setProgress(1.0);  // Optional: can also use setVisible(false)
+        statusLabel.setText("Docker setup complete.");
+    }
+
+    public void markError(String error) {
+        progressBar.setProgress(0);
+        statusLabel.setText("Error: " + error);
     }
     
 }

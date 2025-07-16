@@ -8,7 +8,9 @@ import java.nio.file.Path;
 import java.util.*;
 
 import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -16,9 +18,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.util.Pair;
 import network.simulation.test.Controller.IControllerView;
 import network.simulation.test.Model.IModelView;
-import network.simulation.test.Model.Model;
 import network.simulation.test.Model.Nodes.Device;
-import network.simulation.test.UtilityClasses.Tuple;
 
 public class MainView implements IView {
     private final BorderPane root;
@@ -230,24 +230,45 @@ public class MainView implements IView {
 
     public void handleRunProject() {
         RunPane runPane = new RunPane();
-        Path path = Path.of(model.getPath());
-        root.setCenter(runPane); 
-        ProcessBuilder pb = new ProcessBuilder("docker-compose", "up", "--build", "-d");
-        pb.directory(path.toFile());
-        pb.redirectErrorStream(true);
-        
-        try {
-            Process process = pb.start();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String finalLine = line;
-                Platform.runLater(() -> runPane.appendLog(finalLine));
+        SplitPane splitPane = new SplitPane();
+        splitPane.setOrientation(Orientation.HORIZONTAL);
+        splitPane.getItems().addAll(runPane, detailPanel);
+        splitPane.setDividerPositions(0.7);  // 70% to RunPane, 30% to RightPane
+
+        root.setCenter(splitPane);  // Set the SplitPane as the only center node
+        Task<Void> task = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                Path path = Path.of(model.getPath());
+                ProcessBuilder pb = new ProcessBuilder("docker-compose", "up", "--build", "-d");
+                pb.directory(path.toFile());
+                pb.redirectErrorStream(true);
+
+                try {
+                    Process process = pb.start();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        String finalLine = line;
+                        Platform.runLater(() -> runPane.appendLog(finalLine + "\n"));
+                    }
+                    int exitCode = process.waitFor();
+                    if (exitCode == 0) {
+                        Platform.runLater(runPane::markComplete);
+                    } else {
+                        Platform.runLater(() -> runPane.markError("Docker exited with code " + exitCode + "\n"));
+                    }
+                } catch (IOException | InterruptedException e) {
+                    Platform.runLater(() -> runPane.markError("Error: " + e.getMessage() + "\n"));
+                }
+
+                return null;
             }
-            process.waitFor();
-        } catch (IOException | InterruptedException e) {
-            Platform.runLater(() -> runPane.appendLog("Error: " + e.getMessage()));
-        }
+        };
+
+        Thread backgroundThread = new Thread(task);
+        backgroundThread.setDaemon(true);
+        backgroundThread.start();
     }
 
     private void createMenuBar(VBox top) {

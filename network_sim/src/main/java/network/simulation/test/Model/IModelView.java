@@ -1,6 +1,5 @@
 package network.simulation.test.Model;
 
-import java.net.URI;
 import java.util.ArrayList;
 
 import network.simulation.test.Model.Nodes.Device;

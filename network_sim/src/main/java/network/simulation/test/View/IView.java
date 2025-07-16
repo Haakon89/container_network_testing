@@ -1,7 +1,5 @@
 package network.simulation.test.View;
 
-import java.nio.file.Path;
-
 import network.simulation.test.Controller.IControllerView;
 
 public interface IView {
