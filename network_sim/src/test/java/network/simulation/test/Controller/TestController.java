@@ -103,8 +103,9 @@ public class TestController {
         public DummyView(Model model) {
             this.model = model;
         }
-        @Override public void newProject(String name) {
+        @Override public void newProject(String name, String path) {
             model.setName(name);
+            model.setPath(path);
             //removed the UI elements in the dummy version
             //rootItem.setValue("Project: " + name);
             //updateDisplay();
@@ -113,6 +114,6 @@ public class TestController {
         @Override public void saveProject() {}
         @Override public void saveProjectAs(String name, String path) {}
         @Override public void closeProject() {}
-        @Override public void setController(IViewController controller) {}
+        @Override public void setController(IControllerView controller) {}
     }
 }

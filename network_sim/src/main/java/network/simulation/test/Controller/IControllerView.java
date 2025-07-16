@@ -1,6 +1,8 @@
 package network.simulation.test.Controller;
 
-public interface IViewController {
+import network.simulation.test.View.RunPane;
+
+public interface IControllerView {
     /**
      * Handles click events from the view.
      * @param action the action to perform, such as "newProject", "addStandardNetwork", etc.

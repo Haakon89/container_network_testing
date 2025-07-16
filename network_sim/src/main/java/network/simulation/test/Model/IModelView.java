@@ -1,5 +1,6 @@
 package network.simulation.test.Model;
 
+import java.net.URI;
 import java.util.ArrayList;
 
 import network.simulation.test.Model.Nodes.Device;
@@ -58,5 +59,17 @@ public interface IModelView {
      * @return an ArrayList of strings containing information about the device
      */
     public ArrayList<String> getDeviceInfo(String name);
+
+    /**
+     * Sets the path where the project will be saved.
+     * @param path the path where the project will be saved
+     */
+    public void setPath(String path);
+
+    /**
+     * Gets the path where the project is saved.
+     * @return the path of the project
+     */
+    public String getPath();
     
 }

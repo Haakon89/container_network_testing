@@ -7,9 +7,11 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import javafx.concurrent.Task;
 import network.simulation.test.Model.Nodes.CustomDevice;
 import network.simulation.test.Model.Nodes.Device;
 import network.simulation.test.Model.Nodes.StandardDevice;
+import network.simulation.test.View.RunPane;
 
 public class Model implements IModelView, IModelController {
 
@@ -189,7 +191,10 @@ public class Model implements IModelView, IModelController {
     }
     @Override
     public void buildProject() {
-        generateDockerCompose(Paths.get("network_sim/src/main/resources/Docker/docker-compose.yml"));
+        for (Device device : devices.values()) {
+            device.writeDockerfileToFile(Path.of(this.path));
+        }
+        generateDockerCompose(Paths.get(this.path + "/docker-compose.yml"));
     }
     @Override
     public ArrayList<String> getNetworkInfo(String name) {
@@ -201,5 +206,20 @@ public class Model implements IModelView, IModelController {
         Device device = devices.get(name);
         return device.getDisplayInfo();
     }
-
+    @Override
+    public void setPath(String path) {
+        this.path = path;
+    }
+    @Override
+    public String getPath() {
+        return this.path;
+    }
+    @Override
+    public ArrayList<Device> getAllDevices() {
+        ArrayList<Device> allDevices = new ArrayList<>(unassignedDevices);
+        for (Device device : devices.values()) {
+            allDevices.add(device);
+        }
+        return allDevices;
+    }
 }

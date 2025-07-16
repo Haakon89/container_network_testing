@@ -1,5 +1,10 @@
 package network.simulation.test.Model;
 
+import java.util.List;
+
+import network.simulation.test.Model.Nodes.Device;
+import network.simulation.test.View.RunPane;
+
 public interface IModelController {
 
     /**
@@ -49,4 +54,11 @@ public interface IModelController {
      */
     public void buildProject();
 
+    /**
+     * gets all the devices in the model
+     * @return a list of all devices in the model
+     */
+    public List<Device> getAllDevices();
+    
+    
 }

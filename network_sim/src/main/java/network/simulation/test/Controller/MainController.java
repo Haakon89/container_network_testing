@@ -1,13 +1,18 @@
 package network.simulation.test.Controller;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import javafx.application.Platform;
+import javafx.concurrent.Task;
 import network.simulation.test.Model.IModelController;
+import network.simulation.test.Model.Nodes.Device;
 import network.simulation.test.View.IView;
+import network.simulation.test.View.RunPane;
 
-public class MainController implements IViewController, IControllerModel {
+public class MainController implements IControllerView, IControllerModel {
     private IView view;
     private IModelController model;
     private final Map<String, Consumer<String[]>> actionMap = new HashMap<>();
@@ -16,7 +21,7 @@ public class MainController implements IViewController, IControllerModel {
         this.model = model;
         this.view = view;
     
-        actionMap.put("newProject", args -> view.newProject(args[0]));
+        actionMap.put("newProject", args -> view.newProject(args[0], args[1]));
         actionMap.put("openProject", args -> view.openProject(args[0]));
         actionMap.put("saveProject", args -> view.saveProject());
         actionMap.put("saveProjectAs", args -> view.saveProjectAs(args[0], args[1]));

@@ -2,15 +2,16 @@ package network.simulation.test.View;
 
 import java.nio.file.Path;
 
-import network.simulation.test.Controller.IViewController;
+import network.simulation.test.Controller.IControllerView;
 
 public interface IView {
 
     /**
      * Creates a new project with the given name.
      * @param name the name of the new project
+     * @param path the path where the project will be saved
      */
-    public void newProject(String name);
+    public void newProject(String name, String path);
 
     /**
      * Opens an existing project from the specified path.
@@ -41,5 +42,5 @@ public interface IView {
      * This allows the view to communicate with the controller for actions like creating networks, devices, etc.
      * @param mainController the controller that will handle user interactions
      */
-    public void setController(IViewController mainController);
+    public void setController(IControllerView mainController);
 }

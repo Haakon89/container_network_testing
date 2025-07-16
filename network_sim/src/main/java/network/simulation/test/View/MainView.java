@@ -1,5 +1,9 @@
 package network.simulation.test.View;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -8,8 +12,9 @@ import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.stage.DirectoryChooser;
 import javafx.util.Pair;
-import network.simulation.test.Controller.IViewController;
+import network.simulation.test.Controller.IControllerView;
 import network.simulation.test.Model.IModelView;
 import network.simulation.test.Model.Model;
 import network.simulation.test.Model.Nodes.Device;
@@ -22,7 +27,7 @@ public class MainView implements IView {
     private final VBox detailPanel = new VBox();
     private final Map<String, TreeItem<String>> networkItems = new HashMap<>();
 
-    private IViewController controller;
+    private IControllerView controller;
     private IModelView model;
 
     public MainView(IModelView model) {
@@ -47,12 +52,14 @@ public class MainView implements IView {
         Button addNetworkBtn = new Button("Add Network");
         Button addDeviceBtn = new Button("Add Device");
         Button buildProjectBtn = new Button("Build");
+        Button runProjectBtn = new Button("Run");
 
         addNetworkBtn.setOnAction(e -> handleAddNetwork());
         addDeviceBtn.setOnAction(e -> handleAddDevice());
         buildProjectBtn.setOnAction(e -> handleBuildProject());
+        runProjectBtn.setOnAction(e -> handleRunProject());
 
-        VBox treeWithButtons = new VBox(projectTree, addNetworkBtn, addDeviceBtn, buildProjectBtn);
+        VBox treeWithButtons = new VBox(projectTree, addNetworkBtn, addDeviceBtn, buildProjectBtn, runProjectBtn);
         treeWithButtons.setPadding(new Insets(10));
         treeWithButtons.setSpacing(5);
 
@@ -221,6 +228,28 @@ public class MainView implements IView {
         controller.onClick("buildProject");
     }
 
+    public void handleRunProject() {
+        RunPane runPane = new RunPane();
+        Path path = Path.of(model.getPath());
+        root.setCenter(runPane); 
+        ProcessBuilder pb = new ProcessBuilder("docker-compose", "up", "--build", "-d");
+        pb.directory(path.toFile());
+        pb.redirectErrorStream(true);
+        
+        try {
+            Process process = pb.start();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String finalLine = line;
+                Platform.runLater(() -> runPane.appendLog(finalLine));
+            }
+            process.waitFor();
+        } catch (IOException | InterruptedException e) {
+            Platform.runLater(() -> runPane.appendLog("Error: " + e.getMessage()));
+        }
+    }
+
     private void createMenuBar(VBox top) {
         MenuBar menuBar = new MenuBar();
 
@@ -228,12 +257,19 @@ public class MainView implements IView {
         Menu fileMenu = new Menu("File");
         MenuItem newItem = new MenuItem("New Project");
         newItem.setOnAction(e -> {
-            TextInputDialog dialog = new TextInputDialog("NewProject");
-            dialog.setTitle("New Project");
-            dialog.setHeaderText("Enter a name for the new project:");
-            dialog.setContentText("Project name:");
+            DirectoryChooser directoryChooser = new DirectoryChooser();
+            directoryChooser.setTitle("Select Project Directory");
 
-            dialog.showAndWait().ifPresent(name -> controller.onClick("newProject", name));
+            File selectedDirectory = directoryChooser.showDialog(root.getScene().getWindow());
+
+            if (selectedDirectory != null) {
+                TextInputDialog dialog = new TextInputDialog("NewProject");
+                dialog.setTitle("New Project");
+                dialog.setHeaderText("Enter a name for the new project:");
+                dialog.setContentText("Project name:");
+    
+                dialog.showAndWait().ifPresent(name -> controller.onClick("newProject", name, selectedDirectory.getAbsolutePath()));
+            }
         });
 
         MenuItem exitItem = new MenuItem("Exit");
@@ -256,13 +292,14 @@ public class MainView implements IView {
     }
 
     @Override
-    public void setController(IViewController controller) {
+    public void setController(IControllerView controller) {
         this.controller = controller;
     }
 
     @Override
-    public void newProject(String name) {
+    public void newProject(String name, String path) {
         model.setName(name);
+        model.setPath(path);
         rootItem.setValue("Project: " + name);
         updateDisplay();
     }

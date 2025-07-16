@@ -132,7 +132,6 @@ public class Network {
     public String getComposeInfo() {
         StringBuilder sb = new StringBuilder();
         for (Device device : this.devicesInNetwork) {
-            device.writeDockerfileToFile(Paths.get("network_sim/src/main/resources/Docker/"));
             sb.append("  ").append(device.getName()).append(":\n");
             sb.append("    build : ./" + device.getName() + "\n");
             sb.append("    container_name: ").append(device.getName()).append("\n");
