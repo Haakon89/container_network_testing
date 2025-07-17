@@ -58,6 +58,16 @@ public interface IModelController {
      * @return a list of all devices in the model
      */
     public List<Device> getAllDevices();
+
+    /**
+     * Edits the details of an existing device.
+     * @param oldName the current name of the device to be edited
+     * @param newName the new name for the device
+     * @param newOS the new operating system for the device
+     * @param newServices the new services for the device, as a comma-separated string
+     * @param entryPoint indicates whether the device is an entry point (true or false)
+     */
+    public void editDevice(String oldName, String newName, String newOS, String newServices, String entryPoint);
     
     
 }

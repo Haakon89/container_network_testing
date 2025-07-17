@@ -20,6 +20,7 @@ public class Model implements IModelView, IModelController {
     ArrayList<Device> unassignedDevices;
     int devicesCreated;
     String path;
+    String entryPoint;
 
     public Model() {
         this.name = "";
@@ -29,6 +30,7 @@ public class Model implements IModelView, IModelController {
         this.unassignedDevices = new ArrayList<>();
         this.devicesCreated = 0;
         this.path = "./";
+        this.entryPoint = null;
     }
     @Override
     public void setName(String name) {
@@ -219,5 +221,39 @@ public class Model implements IModelView, IModelController {
             allDevices.add(device);
         }
         return allDevices;
+    }
+    @Override
+    public String getEntryPoint() {
+        return this.entryPoint;
+    }
+
+    @Override
+    public void setEntryPoint(String name) {
+        this.entryPoint = name;
+    }
+    @Override
+    public void editDevice(String oldName, String newName, String newOS, String newServices, String entryPoint) {
+        Device device = this.devices.get(oldName);
+        if (newName != null && !newName.isEmpty()) {
+            device.setName(newName);
+        }
+        if (newOS != null && !newOS.isEmpty()) {
+            device.setBaseImage(newOS);
+        } 
+        if (newServices != null && !newServices.isEmpty()) {
+            String[] servicesArray = newServices.split(",");
+            for (String service : servicesArray) {
+                device.installService(service.trim());
+            }
+        }
+        if (entryPoint != null && !entryPoint.isEmpty()) {
+            boolean isEntryPoint = Boolean.parseBoolean(entryPoint);
+            device.setEntryPoint(isEntryPoint);
+            if (isEntryPoint) {
+                this.setEntryPoint(device.getName());
+            } else if (this.getEntryPoint().equals(device.getName())) {
+                this.setEntryPoint(null);  
+            }
+        }
     }
 }

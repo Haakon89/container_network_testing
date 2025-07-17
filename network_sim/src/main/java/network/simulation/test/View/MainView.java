@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import javafx.application.Platform;
 import javafx.concurrent.Task;
@@ -229,7 +230,7 @@ public class MainView implements IView {
     }
 
     public void handleRunProject() {
-        RunPane runPane = new RunPane();
+        RunPane runPane = new RunPane(this.model);
         SplitPane splitPane = new SplitPane();
         splitPane.setOrientation(Orientation.HORIZONTAL);
         splitPane.getItems().addAll(runPane, detailPanel);
@@ -332,29 +333,54 @@ public class MainView implements IView {
      * Additionally, it includes an "Unassigned Devices" section for devices not assigned to any network.
      */
     private void updateDisplay() {
-        rootItem.getChildren().clear();
-        networkItems.clear();
+        Set<String> currentNetworks = new HashSet<>(model.getNetworkNames());
 
-        // Networks
-        for (String name : model.getNetworkNames()) {
-            ArrayList<Device> devices = model.getDevicesInNetwork(name);
-
-            TreeItem<String> networkItem = new TreeItem<>("Network: " + name);
-            for (Device device : devices) {
-                TreeItem<String> deviceItem = new TreeItem<>(device.getName());
-                networkItem.getChildren().add(deviceItem);
+        // Remove stale network items
+        rootItem.getChildren().removeIf(item -> {
+            String label = item.getValue();
+            if (label.startsWith("Network: ")) {
+                String name = label.substring("Network: ".length());
+                return !currentNetworks.contains(name);
             }
-            networkItems.put(name, networkItem);
-            rootItem.getChildren().add(networkItem);
-        }
+            return false;
+        });
 
-        // Unassigned
-        TreeItem<String> unassignedItem = new TreeItem<>("Unassigned Devices");
-        for (Device device : model.getUnassignedDevices()) {
-            TreeItem<String> deviceItem = new TreeItem<>(device.getName());
-            unassignedItem.getChildren().add(deviceItem);
-        }
-        rootItem.getChildren().add(unassignedItem);
+        // Add or update networks
+        for (String networkName : currentNetworks) {
+            TreeItem<String> networkItem = networkItems.get(networkName);
+            ArrayList<Device> devices = model.getDevicesInNetwork(networkName);
+
+            if (networkItem == null) {
+                networkItem = new TreeItem<>("Network: " + networkName);
+                networkItems.put(networkName, networkItem);
+                rootItem.getChildren().add(networkItem);
+            }
+
+            Set<String> currentDeviceNames = devices.stream()
+                .map(Device::getName)
+                .collect(Collectors.toSet());
+
+            // Remove missing devices
+            networkItem.getChildren().removeIf(child -> 
+                !currentDeviceNames.contains(child.getValue()));
+
+            // Add new devices
+            for (Device device : devices) {
+                boolean exists = networkItem.getChildren().stream()
+                    .anyMatch(child -> child.getValue().equals(device.getName()));
+                if (!exists) {
+                    networkItem.getChildren().add(new TreeItem<>(device.getName()));
+                }
+            }
+    }
+
+    // Handle unassigned devices (optional: make it smart too)
+    rootItem.getChildren().removeIf(item -> item.getValue().equals("Unassigned Devices"));
+    TreeItem<String> unassignedItem = new TreeItem<>("Unassigned Devices");
+    for (Device device : model.getUnassignedDevices()) {
+        unassignedItem.getChildren().add(new TreeItem<>(device.getName()));
+    }
+    rootItem.getChildren().add(unassignedItem);
     }
 
     private ContextMenu createDeviceContextMenu(TreeItem<String> deviceItem) {
@@ -373,19 +399,19 @@ public class MainView implements IView {
      * Contains the edited device details such as name, IP, OS, and services.
      */
     public class DeviceEditResult {
-        private final String name, ip, os, services;
+        private final String name, os, services, isEntryPoint;
     
-        public DeviceEditResult(String name, String ip, String os, String services) {
+        public DeviceEditResult(String name, String os, String services, String isEntryPoint) {
             this.name = name;
-            this.ip = ip;
             this.os = os;
             this.services = services;
+            this.isEntryPoint = isEntryPoint;
         }
     
         public String getName() { return name; }
-        public String getIp() { return ip; }
         public String getOs() { return os; }
         public String getServices() { return services; }
+        public String getIsEntryPoint() { return isEntryPoint; }
     }
 
     /**
@@ -405,9 +431,9 @@ public class MainView implements IView {
 
         // Create input fields
         TextField nameField = new TextField(deviceItem.getValue());
-        TextField ipField = new TextField();
         TextField osField = new TextField();
         TextField servicesField = new TextField();
+        TextField entryPointField = new TextField();
 
         GridPane grid = new GridPane();
         grid.setHgap(10);
@@ -416,25 +442,25 @@ public class MainView implements IView {
 
         grid.add(new Label("Device name:"), 0, 0);
         grid.add(nameField, 1, 0);
-        grid.add(new Label("IP address:"), 0, 1);
-        grid.add(ipField, 1, 1);
         grid.add(new Label("Operating System:"), 0, 2);
         grid.add(osField, 1, 2);
         grid.add(new Label("Services (comma-separated):"), 0, 3);
         grid.add(servicesField, 1, 3);
+        grid.add(new Label("Is this the entry-point? (true or false)"), 0, 3);
+        grid.add(entryPointField, 1, 4);
 
         dialog.getDialogPane().setContent(grid);
 
         Platform.runLater(nameField::requestFocus);
-
+        
         // Convert result when Save is pressed
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == saveButtonType) {
                 return new DeviceEditResult(
                     nameField.getText(),
-                    ipField.getText(),
                     osField.getText(),
-                    servicesField.getText()
+                    servicesField.getText(),
+                    entryPointField.getText()
                 );
             }
             return null;
@@ -446,9 +472,9 @@ public class MainView implements IView {
             controller.onClick("editDevice",
                 deviceItem.getValue(), // old name
                 edited.getName(),      // new name
-                edited.getIp(),
                 edited.getOs(),
-                edited.getServices()
+                edited.getServices(),
+                edited.getIsEntryPoint()
             );
             updateDisplay();
         });

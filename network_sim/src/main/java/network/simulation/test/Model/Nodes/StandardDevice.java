@@ -9,12 +9,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class StandardDevice extends Device{
-    private String baseImage;
     private Map<String, Integer> servicePorts;
 
     public StandardDevice(String name) {
         super(name);
-        this.baseImage = "ubuntu:latest";
+        this.setBaseImage("ubuntu:latest");
         installPackagesFromFile("network_sim/src/main/resources/Text/StandardPackages.txt");
         installServicesFromFile("network_sim/src/main/resources/Text/StandardServices.txt");
         this.servicePorts = new HashMap<>();
@@ -100,26 +99,10 @@ public class StandardDevice extends Device{
             }
         }
         dockerfile.append("\n");
-        if (isEntryPoint) {
-            dockerfile.append("CMD [\"/bin/bash\"]\n");
-        } else {
-            dockerfile.append("CMD [\"tail\", \"-f\", \"/dev/null\"]\n");
-        }
-        return dockerfile.toString();
-    }
-    @Override
-    public void writeDockerfileToFile(Path filePath) {
-        String dockerfileContent = generateDockerfile();
+        dockerfile.append("CMD [\"tail\", \"-f\", \"/dev/null\"]\n");
 
-        try {
-            Path deviceDir = filePath.resolve(this.name);
-            Path dockerfilePath = deviceDir.resolve("Dockerfile");
-            Files.createDirectories(deviceDir);
-            Files.writeString(dockerfilePath, dockerfileContent);
-        } catch (IOException e) {
-            System.err.println("Error writing Dockerfile: " + e.getMessage());
-        }
-    }
+        return dockerfile.toString();
+    }    
 
     @Override
     public void start() {

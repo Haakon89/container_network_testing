@@ -70,5 +70,17 @@ public interface IModelView {
      * @return the path of the project
      */
     public String getPath();
+
+    /**
+     * Gets the entry point container name.
+     * @return the name of the entry point container
+     */
+    public String getEntryPoint();
+
+    /**
+     * Sets the entry point container by its name.
+     * @param name the name of the entry point container
+     */
+    public void setEntryPoint(String name);
     
 }

@@ -153,6 +153,58 @@ public class Network {
         return sb.toString();
     }
 
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        result = prime * result + ((adressRange == null) ? 0 : adressRange.hashCode());
+        result = prime * result + capacity;
+        result = prime * result + ((gatewayAddress == null) ? 0 : gatewayAddress.hashCode());
+        result = prime * result + ((devicesInNetwork == null) ? 0 : devicesInNetwork.hashCode());
+        result = prime * result + ((reusableIPAddresses == null) ? 0 : reusableIPAddresses.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        Network other = (Network) obj;
+        if (name == null) {
+            if (other.name != null)
+                return false;
+        } else if (!name.equals(other.name))
+            return false;
+        if (adressRange == null) {
+            if (other.adressRange != null)
+                return false;
+        } else if (!adressRange.equals(other.adressRange))
+            return false;
+        if (capacity != other.capacity)
+            return false;
+        if (gatewayAddress == null) {
+            if (other.gatewayAddress != null)
+                return false;
+        } else if (!gatewayAddress.equals(other.gatewayAddress))
+            return false;
+        if (devicesInNetwork == null) {
+            if (other.devicesInNetwork != null)
+                return false;
+        } else if (!devicesInNetwork.equals(other.devicesInNetwork))
+            return false;
+        if (reusableIPAddresses == null) {
+            if (other.reusableIPAddresses != null)
+                return false;
+        } else if (!reusableIPAddresses.equals(other.reusableIPAddresses))
+            return false;
+        return true;
+    }
+
     public ArrayList<String> getDisplayInfo() {
         ArrayList<String> info = new ArrayList<>();
         info.add("Network Name: " + this.name);
