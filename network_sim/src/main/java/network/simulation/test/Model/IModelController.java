@@ -68,6 +68,25 @@ public interface IModelController {
      * @param entryPoint indicates whether the device is an entry point (true or false)
      */
     public void editDevice(String oldName, String newName, String newOS, String newServices, String entryPoint);
+
+    /**
+     * loads the model from a given path
+     * @param path the path to the model file
+     */
+    public void loadModel(String path);
+
+    /**
+     * Saves the current model to the path set at the model's construction.
+     */
+    public void saveModel();
+
+    /**
+     * Saves the current model to a specified path with a given name.
+     * This method allows the user to save the model under a different name or location.
+     * @param name the name of the model to be saved
+     * @param path the path where the model will be saved
+     */
+    public void saveModelAs(String name, String path);
     
     
 }

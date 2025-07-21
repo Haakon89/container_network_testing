@@ -21,6 +21,9 @@ public class Network {
         generateCapacity(adressRange);
         this.gatewayAddress = generateIPAddress();
     }
+
+    // Constructor for JSON deserialization
+    public Network() {}
     
     /**
      * Adds a device to the network if there is capacity.
@@ -101,20 +104,48 @@ public class Network {
         return true;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public String getName() {
         return this.name;
+    }
+
+    public void setAdressRange(String adressRange) {
+        this.adressRange = adressRange;
+        generateCapacity(adressRange);
     }
 
     public String getAdressRange() {
         return this.adressRange;
     }
 
+    public void setCapacity(int capacity) {
+        this.capacity = capacity;
+    }
+
     public int getCapacity() {
         return this.capacity;
     }
 
+    public void setDevicesInNetwork(ArrayList<Device> devices) {
+        this.devicesInNetwork = devices;
+    }
     public ArrayList<Device> getDevicesInNetwork() {
         return this.devicesInNetwork;
+    }
+
+    public void setReusableIPAddresses(ArrayList<String> reusableIPAddresses) {
+        this.reusableIPAddresses = reusableIPAddresses;
+    }
+    
+    public ArrayList<String> getReusableIPAddresses() {
+        return this.reusableIPAddresses;
+    }
+
+    public void setGateway(String gatewayAddress) {
+        this.gatewayAddress = gatewayAddress;
     }
 
     public String getGateway() {

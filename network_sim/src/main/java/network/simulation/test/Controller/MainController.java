@@ -17,10 +17,10 @@ public class MainController implements IControllerView, IControllerModel {
         this.view = view;
     
         actionMap.put("newProject", args -> view.newProject(args[0], args[1]));
-        actionMap.put("openProject", args -> view.openProject(args[0]));
-        actionMap.put("saveProject", args -> view.saveProject());
-        actionMap.put("saveProjectAs", args -> view.saveProjectAs(args[0], args[1]));
         actionMap.put("closeProject", args -> view.closeProject());
+        actionMap.put("openProject", args -> model.loadModel(args[0]));
+        actionMap.put("saveProject", args -> model.saveModel());
+        actionMap.put("saveProjectAs", args -> model.saveModelAs(args[0], args[1]));
         actionMap.put("addStandardNetwork", args -> model.addStandardNetwork());
         actionMap.put("addCustomNetwork", args -> model.createNetwork(args[0], args[1]));
         actionMap.put("addStandardDevice", args -> model.addStandardDevice());

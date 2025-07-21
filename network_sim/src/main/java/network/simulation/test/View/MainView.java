@@ -278,6 +278,8 @@ public class MainView implements IView {
         // File menu
         Menu fileMenu = new Menu("File");
         MenuItem newItem = new MenuItem("New Project");
+        MenuItem openItem = new MenuItem("Open Project");
+        MenuItem saveItem = new MenuItem("Save Project");
         newItem.setOnAction(e -> {
             DirectoryChooser directoryChooser = new DirectoryChooser();
             directoryChooser.setTitle("Select Project Directory");
@@ -293,11 +295,25 @@ public class MainView implements IView {
                 dialog.showAndWait().ifPresent(name -> controller.onClick("newProject", name, selectedDirectory.getAbsolutePath()));
             }
         });
+        openItem.setOnAction(e -> {
+            DirectoryChooser directoryChooser = new DirectoryChooser();
+            directoryChooser.setTitle("Open Project Directory");
+
+            File selectedDirectory = directoryChooser.showDialog(root.getScene().getWindow());
+
+            if (selectedDirectory != null) {
+                controller.onClick("openProject", selectedDirectory.getAbsolutePath());
+            }
+            updateDisplay();
+        });
+        saveItem.setOnAction(e -> {
+            controller.onClick("saveProject");
+        });
 
         MenuItem exitItem = new MenuItem("Exit");
         exitItem.setOnAction(e -> Platform.exit());
 
-        fileMenu.getItems().addAll(newItem, exitItem);
+        fileMenu.getItems().addAll(newItem, openItem, saveItem, exitItem);
 
         // Edit menu
         Menu editMenu = new Menu("Edit");
@@ -446,7 +462,7 @@ public class MainView implements IView {
         grid.add(osField, 1, 2);
         grid.add(new Label("Services (comma-separated):"), 0, 3);
         grid.add(servicesField, 1, 3);
-        grid.add(new Label("Is this the entry-point? (true or false)"), 0, 3);
+        grid.add(new Label("Is this the entry-point? (true or false)"), 0, 4);
         grid.add(entryPointField, 1, 4);
 
         dialog.getDialogPane().setContent(grid);
@@ -510,24 +526,6 @@ public class MainView implements IView {
         String deviceHome = model.findDevice(deviceName);
         controller.onClick("deleteDevice", deviceName, deviceHome);
         updateDisplay();
-    }
-
-    @Override
-    public void openProject(String path) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'openProject'");
-    }
-
-    @Override
-    public void saveProject() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'saveProject'");
-    }
-
-    @Override
-    public void saveProjectAs(String name, String path) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'saveProjectAs'");
     }
 
     @Override

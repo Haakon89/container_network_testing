@@ -110,9 +110,6 @@ public class TestController {
             //rootItem.setValue("Project: " + name);
             //updateDisplay();
         }
-        @Override public void openProject(String name) {}
-        @Override public void saveProject() {}
-        @Override public void saveProjectAs(String name, String path) {}
         @Override public void closeProject() {}
         @Override public void setController(IControllerView controller) {}
     }

@@ -1,15 +1,23 @@
 package network.simulation.test.Model;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
+
 import network.simulation.test.Model.Nodes.CustomDevice;
 import network.simulation.test.Model.Nodes.Device;
 import network.simulation.test.Model.Nodes.StandardDevice;
+import network.simulation.test.UtilityClasses.ProjectLoader;
+import network.simulation.test.UtilityClasses.ProjectSaver;
 
 public class Model implements IModelView, IModelController {
 
@@ -17,7 +25,7 @@ public class Model implements IModelView, IModelController {
     HashMap<String, Network> networks;
     HashMap<String, Device> devices;
     ArrayList<String> networkNames;
-    ArrayList<Device> unassignedDevices;
+    transient ArrayList<Device> unassignedDevices;
     int devicesCreated;
     String path;
     String entryPoint;
@@ -32,6 +40,7 @@ public class Model implements IModelView, IModelController {
         this.path = "./";
         this.entryPoint = null;
     }
+    
     @Override
     public void setName(String name) {
         this.name = name;
@@ -41,6 +50,17 @@ public class Model implements IModelView, IModelController {
     public String getName() {
         return this.name;
     }
+
+    public HashMap<String, Network> getNetworks() {
+        return this.networks;
+    }
+    public HashMap<String, Device> getDevices() {
+        return this.devices;
+    }
+    public int getDevicesCreated() {
+        return this.devicesCreated;
+    }
+
     @Override
     public void createNetwork(String name, String adressRange) {
         Network network = new Network(name, adressRange);
@@ -255,5 +275,54 @@ public class Model implements IModelView, IModelController {
                 this.setEntryPoint(null);  
             }
         }
+    }
+
+    @Override
+    public void loadModel(String path) {
+        try {
+            Path projectPath = Path.of(path);
+            String json = Files.readString(projectPath.resolve("project.json"));
+    
+            // Deserialize full model (excluding unassignedDevices, which is transient)
+            Model loadedModel = ProjectLoader.getCustomGson().fromJson(json, Model.class);
+    
+            // Manually restore unassignedDevices
+            JsonObject jsonObject = JsonParser.parseString(json).getAsJsonObject();
+            JsonElement devicesJson = jsonObject.get("unassignedDevices");
+    
+            if (devicesJson != null && !devicesJson.isJsonNull()) {
+                Type deviceListType = new TypeToken<ArrayList<Device>>() {}.getType();
+                ArrayList<Device> unassigned = ProjectLoader.getCustomGson().fromJson(devicesJson, deviceListType);
+                this.unassignedDevices = unassigned;
+            }
+    
+            // Copy remaining state
+            this.name = loadedModel.getName();
+            this.networks = loadedModel.getNetworks();
+            this.devices = loadedModel.getDevices();
+            this.networkNames = loadedModel.getNetworkNames();
+            this.devicesCreated = loadedModel.getDevicesCreated();
+            this.path = loadedModel.getPath();
+            this.entryPoint = loadedModel.getEntryPoint();
+    
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        
+    }
+
+    @Override
+    public void saveModel() {
+        try {
+            ProjectSaver.saveProject(this);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void saveModelAs(String name, String path) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'saveModelAs'");
     }
 }

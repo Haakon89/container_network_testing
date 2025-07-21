@@ -25,6 +25,9 @@ public abstract class Device {
         this.baseImage = null;
     }
 
+    //constructor for json
+    public Device() {}
+
     public void setName(String name) {
         this.name = name;
     }
@@ -72,10 +75,18 @@ public abstract class Device {
         }
     }
 
+    public void setPackages(ArrayList<String> packages) {
+        this.packages = packages;
+    }
+
     public ArrayList<String> getPackages() {
         return packages;
     }
 
+    public void setServices(ArrayList<String> services) {
+        this.services = services;
+    }
+    
     public ArrayList<String> getServices() {
         return services;
     }
