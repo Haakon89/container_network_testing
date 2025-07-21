@@ -325,4 +325,70 @@ public class Model implements IModelView, IModelController {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'saveModelAs'");
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        result = prime * result + ((networks == null) ? 0 : networks.hashCode());
+        result = prime * result + ((devices == null) ? 0 : devices.hashCode());
+        result = prime * result + ((networkNames == null) ? 0 : networkNames.hashCode());
+        result = prime * result + ((unassignedDevices == null) ? 0 : unassignedDevices.hashCode());
+        result = prime * result + devicesCreated;
+        result = prime * result + ((path == null) ? 0 : path.hashCode());
+        result = prime * result + ((entryPoint == null) ? 0 : entryPoint.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        Model other = (Model) obj;
+        if (name == null) {
+            if (other.name != null)
+                return false;
+        } else if (!name.equals(other.name))
+            return false;
+        if (networks == null) {
+            if (other.networks != null)
+                return false;
+        } else if (!networks.equals(other.networks))
+            return false;
+        if (devices == null) {
+            if (other.devices != null)
+                return false;
+        } else if (!devices.equals(other.devices))
+            return false;
+        if (networkNames == null) {
+            if (other.networkNames != null)
+                return false;
+        } else if (!networkNames.equals(other.networkNames))
+            return false;
+        if (unassignedDevices == null) {
+            if (other.unassignedDevices != null)
+                return false;
+        } else if (!unassignedDevices.equals(other.unassignedDevices))
+            return false;
+        if (devicesCreated != other.devicesCreated)
+            return false;
+        if (path == null) {
+            if (other.path != null)
+                return false;
+        } else if (!path.equals(other.path))
+            return false;
+        if (entryPoint == null) {
+            if (other.entryPoint != null)
+                return false;
+        } else if (!entryPoint.equals(other.entryPoint))
+            return false;
+        return true;
+    }
+
+    
 }
