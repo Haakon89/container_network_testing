@@ -14,6 +14,7 @@ public abstract class Device {
     protected boolean isEntryPoint;
     protected String ipAddress; 
     protected String baseImage;
+    protected String DNSLabel;
 
     public Device(String name) {
         this.name = name;
@@ -23,6 +24,7 @@ public abstract class Device {
         this.isRunning = false;
         this.isEntryPoint = false;
         this.baseImage = null;
+        this.DNSLabel = null;
     }
 
     //constructor for json
@@ -107,22 +109,15 @@ public abstract class Device {
         this.isEntryPoint = isEntryPoint;
     }
 
+    public String getDNSLabel() {
+        return this.DNSLabel;
+    }
+
     /**
      * Writes the Dockerfile content to a file at the specified path.
      * @param filepath the path where the Dockerfile should be written
      */
-    public void writeDockerfileToFile(Path filePath) {
-        String dockerfileContent = generateDockerfile();
-
-        try {
-            Path deviceDir = filePath.resolve(this.name);
-            Path dockerfilePath = deviceDir.resolve("Dockerfile");
-            Files.createDirectories(deviceDir);
-            Files.writeString(dockerfilePath, dockerfileContent);
-        } catch (IOException e) {
-            System.err.println("Error writing Dockerfile: " + e.getMessage());
-        }
-    }
+    public abstract void writeDockerfileToFile(Path filePath);
 
     /**
      * Generates a Dockerfile for the device based on its services and packages.
@@ -182,6 +177,8 @@ public abstract class Device {
             return false;
         return true;
     }
+
+    
 }
 
     

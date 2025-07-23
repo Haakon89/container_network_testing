@@ -1,5 +1,8 @@
 package network.simulation.test.Model.Nodes;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -9,6 +12,7 @@ public class WebServer extends Device {
 
     public WebServer(String name) {
         super(name);
+        this.DNSLabel = "www";
         this.setBaseImage("ubuntu:latest");
         this.servicePorts = new HashMap<>();
 
@@ -60,6 +64,20 @@ public class WebServer extends Device {
     }
 
     @Override
+    public void writeDockerfileToFile(Path filePath) {
+        String dockerfileContent = generateDockerfile();
+
+        try {
+            Path deviceDir = filePath.resolve(this.name);
+            Path dockerfilePath = deviceDir.resolve("Dockerfile");
+            Files.createDirectories(deviceDir);
+            Files.writeString(dockerfilePath, dockerfileContent);
+        } catch (IOException e) {
+            System.err.println("Error writing Dockerfile: " + e.getMessage());
+        }
+    }
+
+    @Override
     public void start() {
         setRunning(true);
     }
@@ -81,4 +99,6 @@ public class WebServer extends Device {
         info.add("Installed Services: " + String.join(", ", getServices()));
         return info;
     }
+
+    
 }

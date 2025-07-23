@@ -2,6 +2,7 @@ package network.simulation.test.Model.Nodes;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,6 +13,7 @@ public class StandardDevice extends Device{
 
     public StandardDevice(String name) {
         super(name);
+        this.DNSLabel = name;
         this.setBaseImage("ubuntu:latest");
         installPackagesFromFile("network_sim/src/main/resources/Text/StandardPackages.txt");
         installServicesFromFile("network_sim/src/main/resources/Text/StandardServices.txt");
@@ -104,6 +106,20 @@ public class StandardDevice extends Device{
     }    
 
     @Override
+    public void writeDockerfileToFile(Path filePath) {
+        String dockerfileContent = generateDockerfile();
+
+        try {
+            Path deviceDir = filePath.resolve(this.name);
+            Path dockerfilePath = deviceDir.resolve("Dockerfile");
+            Files.createDirectories(deviceDir);
+            Files.writeString(dockerfilePath, dockerfileContent);
+        } catch (IOException e) {
+            System.err.println("Error writing Dockerfile: " + e.getMessage());
+        }
+    }
+
+    @Override
     public void start() {
         setRunning(true);
     }
@@ -123,6 +139,5 @@ public class StandardDevice extends Device{
         info.add("Installed Packages: " + String.join(", ", getPackages()));
         info.add("Installed Services: " + String.join(", ", getServices()));
         return info;
-    }
-    
+    }    
 }
