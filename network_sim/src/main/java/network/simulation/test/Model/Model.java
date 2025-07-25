@@ -7,22 +7,21 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 
 import network.simulation.test.Model.Nodes.CustomDevice;
+import network.simulation.test.Model.Nodes.DNSServer;
 import network.simulation.test.Model.Nodes.Device;
-import network.simulation.test.Model.Nodes.StandardDevice;
+import network.simulation.test.Model.Nodes.DeviceFactory;
 import network.simulation.test.UtilityClasses.ProjectLoader;
 import network.simulation.test.UtilityClasses.ProjectSaver;
 
 public class Model implements IModelView, IModelController {
 
-    private static final String RESOURCES_DIR_DNS = "src/main/resources/dns/";
+    
 
 
     String name;
@@ -83,7 +82,7 @@ public class Model implements IModelView, IModelController {
     }
 
     @Override
-    public void createDevice(String name, String baseImage) {
+    public void createCustomDevice(String name, String baseImage) {
         String lowerCaseName = name.toLowerCase();
         Device device = new CustomDevice(lowerCaseName, baseImage);
         this.unassignedDevices.add(device);
@@ -92,13 +91,11 @@ public class Model implements IModelView, IModelController {
     }
 
     @Override
-    public void addStandardDevice() {
+    public void createDevice(String deviceType) {
+        Device newDevice = DeviceFactory.buildDevice(deviceType);
+        this.unassignedDevices.add(newDevice);
+        this.devices.put(newDevice.getName(), newDevice);
         this.devicesCreated++;
-        String number = String.valueOf(devicesCreated);
-        String name = "device" + number;
-        Device device = new StandardDevice(name);
-        this.unassignedDevices.add(device);
-        this.devices.put(name, device);
     }
     
     @Override
@@ -216,14 +213,23 @@ public class Model implements IModelView, IModelController {
 
     @Override
     public void buildProject() {
-        for (Device device : devices.values()) {
+        for (Device device : devices.values()) {          
             device.writeDockerfileToFile(Path.of(this.path));
+            if (device instanceof DNSServer) {
+                try {
+                    generateDNSFiles();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
         }
         generateDockerCompose(Paths.get(this.path + "/docker-compose.yml"));
     }
     
     public static String writeForwardZone(ArrayList<Device> devicesInNetwork, String domain, Path path) throws IOException {
-        Path zonePath = path.resolve("zones/");
+        Path zonePath = Paths.get(path + "/zones/");
+        Files.createDirectories(zonePath);
         StringBuilder zone = new StringBuilder();
         zone.append("$TTL 604800\n");
         zone.append("@ IN SOA ns1.").append(domain + ".local").append(". admin.").append(domain + ".local").append(". (\n");
@@ -240,14 +246,16 @@ public class Model implements IModelView, IModelController {
                 zone.append(d.getDNSLabel()).append(" IN A ").append(d.getIpAddress()).append("\n");
             }
         }
+        System.out.println(zone.toString());
         String title = "db." + domain + ".local";
         Files.writeString(zonePath.resolve(title), zone.toString());
-
+        System.out.println("Wrote zone file to: " + zonePath.toAbsolutePath());
         return title;
     }
 
     public static String writeReverseZone(ArrayList<Device> devices, String domain, Path path, String addressRange) throws IOException {
-        Path zonePath = path.resolve("zones/");
+        Path zonePath = Paths.get(path + "/zones/");
+        Files.createDirectories(zonePath);
         StringBuilder zone = new StringBuilder();
         zone.append("$TTL 604800\n");
         zone.append("@ IN SOA ns1." + domain + ".local. admin." + domain + ".local. (\n");
@@ -271,8 +279,9 @@ public class Model implements IModelView, IModelController {
 
         // For /24, we reverse the first 3 octets
         String title = "db." + octets[2] + "." + octets[1] + "." + octets[0] + ".in-addr.arpa";
-    
+        System.out.println(zone.toString());
         Files.writeString(zonePath.resolve(title), zone.toString());
+        System.out.println("Wrote zone file to: " + zonePath.toAbsolutePath());
         return title;
     }
  
@@ -287,14 +296,17 @@ public class Model implements IModelView, IModelController {
         config.append("    type master;\n");
         config.append("    file \"/etc/bind/zones/" + filenameTWO + "\";\n");
         config.append("};\n");
-    
+        System.out.println(config.toString());
         Files.writeString(path.resolve("named.conf.local"), config.toString());
+        System.out.println("Wrote zone file to: " + path.toAbsolutePath());
     }
     
     public void generateDNSFiles() throws IOException {
         for (Network network : networks.values()) {             
-            Path path = Paths.get(RESOURCES_DIR_DNS + network.getName() + "/");
+            Path path = Paths.get(this.path + "/dns1/");
             Files.createDirectories(path);
+            Path zonePath = Paths.get(path + "/zones/");
+            Files.createDirectories(zonePath);
             String domain = network.getName();
             ArrayList<Device> devicesInNetwork = network.getDevicesInNetwork();
             String filenameOne = writeForwardZone(devicesInNetwork, domain, path);
@@ -476,6 +488,10 @@ public class Model implements IModelView, IModelController {
         } else if (!entryPoint.equals(other.entryPoint))
             return false;
         return true;
+    }
+
+    public void resetdeviceFactory() {
+        DeviceFactory.resetCounters();
     }
 
     

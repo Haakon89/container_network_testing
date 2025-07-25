@@ -1,0 +1,12 @@
+$TTL 604800
+@ IN SOA ns1.network1.local. admin.network1.local. (
+    2     ; Serial
+    604800 ; Refresh
+    86400  ; Retry
+    2419200 ; Expire
+    604800 ) ; Negative Cache TTL
+
+@ IN NS ns1.network1.local.
+2 IN PTR standard1.network1.local.
+3 IN PTR standard2.network1.local.
+4 IN PTR ns1.network1.local.

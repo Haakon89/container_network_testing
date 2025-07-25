@@ -23,8 +23,8 @@ public class MainController implements IControllerView, IControllerModel {
         actionMap.put("saveProjectAs", args -> model.saveModelAs(args[0], args[1]));
         actionMap.put("addStandardNetwork", args -> model.addStandardNetwork());
         actionMap.put("addCustomNetwork", args -> model.createNetwork(args[0], args[1]));
-        actionMap.put("addStandardDevice", args -> model.addStandardDevice());
-        actionMap.put("addCustomDevice", args -> model.createDevice(args[0], args[1]));
+        actionMap.put("createCustomDevice", args -> model.createCustomDevice(args[0], args[1]));
+        actionMap.put("createDevice", args -> model.createDevice(args[0]));
         actionMap.put("buildProject", args -> model.buildProject());
         actionMap.put("deleteDevice", args -> model.deleteDevice(args[0], args[1]));
         actionMap.put("assignDeviceToNetwork", args -> model.assignDevice(args[0], args[1]));

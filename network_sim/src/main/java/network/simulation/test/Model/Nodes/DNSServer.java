@@ -1,14 +1,8 @@
 package network.simulation.test.Model.Nodes;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -65,45 +59,10 @@ public class DNSServer extends Device {
             Path dockerfilePath = deviceDir.resolve("Dockerfile");
             Files.createDirectories(deviceDir);
             Files.writeString(dockerfilePath, dockerfileContent);
-
-            // Copy BIND config files from resources to deviceDir
-            copyResourceToFile("dns/named.conf.local", deviceDir.resolve("named.conf.local"));
-            copyResourceDirectory("dns/zones", deviceDir.resolve("zones"));
         } catch (IOException e) {
             System.err.println("Error writing Dockerfile: " + e.getMessage());
         }
     }
-
-    private void copyResourceToFile(String resourcePath, Path targetPath) throws IOException {
-        try (InputStream in = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
-            if (in == null) throw new IOException("Resource not found: " + resourcePath);
-            Files.copy(in, targetPath, StandardCopyOption.REPLACE_EXISTING);
-        }
-    }
-
-    private void copyResourceDirectory(String resourceDir, Path targetDir) throws IOException {
-        try {
-            URI uri = getClass().getClassLoader().getResource(resourceDir).toURI();
-            Path resourcePath = Paths.get(uri);
-
-            Files.walk(resourcePath).forEach(source -> {
-                try {
-                    Path dest = targetDir.resolve(resourcePath.relativize(source).toString());
-                    if (Files.isDirectory(source)) {
-                        Files.createDirectories(dest);
-                    } else {
-                        Files.copy(source, dest, StandardCopyOption.REPLACE_EXISTING);
-                    }
-                } catch (IOException e) {
-                    throw new UncheckedIOException(e);
-                }
-            });
-        } catch (URISyntaxException e) {
-            throw new IOException("Invalid URI for resource directory: " + resourceDir, e);
-        }
-    }
-
-
 
     @Override
     public void start() {

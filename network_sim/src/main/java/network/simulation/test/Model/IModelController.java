@@ -20,17 +20,17 @@ public interface IModelController {
     public void createNetwork(String name, String addressRange);
 
     /**
-     * adds a standard device to the model.
-     * This method is typically used to add a predefined device configuration.
+     * creates a new device of a given type
+     * @param deviceType the type of device we want to create
      */
-    public void addStandardDevice();
+    public void createDevice(String deviceType);
 
     /**
      * Creates a device with the specified name and base image.
      * @param name  the name of the device to be created
      * @param baseImage the base image for the device, e.g., "ubuntu:latest"
      */
-    public void createDevice(String name, String baseImage);
+    public void createCustomDevice(String name, String baseImage);
 
     /**
      * Deletes a device from the model.

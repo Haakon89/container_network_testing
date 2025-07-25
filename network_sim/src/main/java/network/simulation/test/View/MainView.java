@@ -116,15 +116,15 @@ public class MainView implements IView {
      * If custom, prompts for device details and calls the controller to add a custom device.
      */
     private void handleAddDevice() {
-        ChoiceDialog<String> choice = new ChoiceDialog<>("Standard", "Standard", "Custom");
+        ChoiceDialog<String> choice = new ChoiceDialog<>("Standard", "Standard", "DNS", "Web", "Custom");
         choice.setTitle("Add Device");
         choice.setHeaderText("Choose device type:");
         choice.setContentText("Type:");
 
         Optional<String> result = choice.showAndWait();
         result.ifPresent(type -> {
-            if (type.equals("Standard")) {
-                controller.onClick("addStandardDevice");
+            if (!type.equals("Custom")) {
+                controller.onClick("createDevice", type.toLowerCase());
             } else {
                 // Prompt for custom device info
                 Dialog<Pair<String, String>> dialog = new Dialog<>();
@@ -158,7 +158,7 @@ public class MainView implements IView {
 
                 Optional<Pair<String, String>> deviceInfo = dialog.showAndWait();
                 deviceInfo.ifPresent(info -> {
-                    controller.onClick("addCustomDevice", info.getKey(), info.getValue());
+                    controller.onClick("createCustomDevice", info.getKey(), info.getValue());
                 });
             }
         });

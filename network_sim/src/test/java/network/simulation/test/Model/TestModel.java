@@ -6,33 +6,43 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
+import org.junit.jupiter.api.AfterEach;
+
 public class TestModel {
     Model model;
-    String MODELNAME = "TestModel";
-    String CUSTOMNETWORKNAME = "CustomNetwork";
-    String CUSTOMNETWORKADDRESS = "192.168.0.0/24";
-    String STANDARDNETWORKNAMEONE = "network1";
-    String STANDARDNETWORKNAMETWO = "network2";
-    String STANDARDDEVICENAMEONE = "device1";
-    String STANDARDDEVICENAMETWO = "device2";
+    String MODEL_NAME = "TestModel";
+    String CUSTOM_NETWORK_NAME = "CustomNetwork";
+    String CUSTOM_NETWORK_ADDRESS = "192.168.0.0/24";
+    String STANDARD_NETWORK_NAME_ONE = "network1";
+    String STANDARD_NETWORK_NAME_TWO = "network2";
+    String STANDARD_DEVICE_NAME_ONE = "standard1";
+    String STANDARD_DEVICE_NAME_TWO = "standard2";
+    String DEVICETYPE_STANDARD = "standard";
+    String DEVICETYPE_DNS = "dns";
+    String DEVICETYPE_WEB = "web";
 
     @BeforeEach
     void setup() {
         model = new Model();
     }
 
+    @AfterEach
+    void reset() {
+        model.resetdeviceFactory();
+    }
+
     @Test
     void testSetGetName() {
-        assertNotEquals(MODELNAME, model.getName());
-        model.setName(MODELNAME);
-        assertEquals(MODELNAME, model.getName());
+        assertNotEquals(MODEL_NAME, model.getName());
+        model.setName(MODEL_NAME);
+        assertEquals(MODEL_NAME, model.getName());
     }
 
     @Test
     void testCreateNetwork() {
-        model.createNetwork(CUSTOMNETWORKNAME, CUSTOMNETWORKADDRESS);
+        model.createNetwork(CUSTOM_NETWORK_NAME, CUSTOM_NETWORK_ADDRESS);
         assertEquals(1, model.getNetworkNames().size());
-        assertEquals(CUSTOMNETWORKNAME, model.getNetworkNames().get(0));
+        assertEquals(CUSTOM_NETWORK_NAME, model.getNetworkNames().get(0));
     }
 
     @Test
@@ -46,20 +56,21 @@ public class TestModel {
 
     @Test  
     void testCreateDevice() {
-        String deviceName = "testdevice";
-        String baseImage = "ubuntu:latest";
-        model.createDevice(deviceName, baseImage);
+        model.createDevice(DEVICETYPE_STANDARD);
         assertEquals(1, model.getUnassignedDevices().size());
-        assertEquals(deviceName, model.getUnassignedDevices().get(0).getName());
+        assertEquals("standard1", model.getUnassignedDevices().get(0).getName());
     }
 
     @Test
     void testCreateStandardDevice() {
         int initialDeviceCount = model.getUnassignedDevices().size();
-        model.addStandardDevice();
-        assertEquals(initialDeviceCount + 1, model.getUnassignedDevices().size());
-        String newDeviceName = model.getUnassignedDevices().get(initialDeviceCount).getName();
-        assertEquals(STANDARDDEVICENAMEONE, newDeviceName);
+        model.createDevice(DEVICETYPE_STANDARD);
+        model.createDevice(DEVICETYPE_STANDARD);
+        assertEquals(initialDeviceCount + 2, model.getUnassignedDevices().size());
+        String newDeviceNameOne = model.getUnassignedDevices().get(0).getName();
+        String newDeviceNameTwo = model.getUnassignedDevices().get(1).getName();
+        assertEquals(STANDARD_DEVICE_NAME_ONE, newDeviceNameOne);
+        assertEquals(STANDARD_DEVICE_NAME_TWO, newDeviceNameTwo);
     }
 
     @Test
@@ -68,23 +79,23 @@ public class TestModel {
         model.addStandardNetwork();
         String firstNetworkName = model.getNetworkNames().get(0);
         String secondNetworkName = model.getNetworkNames().get(1);
-        assertEquals(STANDARDNETWORKNAMEONE, firstNetworkName);
-        assertEquals(STANDARDNETWORKNAMETWO, secondNetworkName);
+        assertEquals(STANDARD_NETWORK_NAME_ONE, firstNetworkName);
+        assertEquals(STANDARD_NETWORK_NAME_TWO, secondNetworkName);
     }
 
     @Test
     void testGetUnassignedDevices() {
-        model.addStandardDevice();
-        model.addStandardDevice();
+        model.createDevice(DEVICETYPE_STANDARD);
+        model.createDevice(DEVICETYPE_STANDARD);
         String firstDeviceName = model.getUnassignedDevices().get(0).getName();
         String secondDeviceName = model.getUnassignedDevices().get(1).getName();
-        assertEquals(STANDARDDEVICENAMEONE, firstDeviceName);
-        assertEquals(STANDARDDEVICENAMETWO, secondDeviceName);
+        assertEquals(STANDARD_DEVICE_NAME_ONE, firstDeviceName);
+        assertEquals(STANDARD_DEVICE_NAME_TWO, secondDeviceName);
     }
 
     @Test
     void testDeleteDevice() {
-        model.addStandardDevice();
+        model.createDevice(DEVICETYPE_STANDARD);
         String deviceName = model.getUnassignedDevices().get(0).getName();
         model.deleteDevice(deviceName, "unassigned");
         assertEquals(0, model.getUnassignedDevices().size());
@@ -93,7 +104,7 @@ public class TestModel {
     @Test
     void testAssignDevice() {
         model.addStandardNetwork();
-        model.addStandardDevice();
+        model.createDevice(DEVICETYPE_STANDARD);
         String deviceName = model.getUnassignedDevices().get(0).getName();
         String networkName = model.getNetworkNames().get(0);
         model.assignDevice(deviceName, networkName);

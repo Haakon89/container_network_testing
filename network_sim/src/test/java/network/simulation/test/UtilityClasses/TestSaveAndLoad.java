@@ -23,8 +23,8 @@ public class TestSaveAndLoad {
         testModel.setName(projectName);
         testModel.setPath(projectPath);
         testModel.addStandardNetwork();
-        testModel.addStandardDevice();
-        testModel.assignDevice("device1", "network1");
+        testModel.createDevice("standard");
+        testModel.assignDevice("standard1", "network1");
         assertNotEquals(testModel, emptyModel);
         testModel.saveModel();
         try {
