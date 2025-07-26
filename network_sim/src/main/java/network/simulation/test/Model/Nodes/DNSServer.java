@@ -38,7 +38,10 @@ public class DNSServer extends Device {
             }
         }
 
-        dockerfile.append("WORKDIR /etc/bind\n");
+        dockerfile.append("WORKDIR /etc/bind\n\n");
+
+        dockerfile.append("COPY named.conf.local /etc/bind/named.conf.local\n");
+        dockerfile.append("COPY zones/ /etc/bind/zones/\n\n");
 
         // Expose DNS port
         dockerfile.append("EXPOSE 53\n");

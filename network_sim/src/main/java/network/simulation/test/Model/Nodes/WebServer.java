@@ -3,6 +3,8 @@ package network.simulation.test.Model.Nodes;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,7 +15,7 @@ public class WebServer extends Device {
     public WebServer(String name) {
         super(name);
         this.DNSLabel = "www";
-        this.setBaseImage("ubuntu:latest");
+        this.setBaseImage("httpd:2.4");
         this.servicePorts = new HashMap<>();
 
         // Define key ports used for web servers
@@ -33,35 +35,21 @@ public class WebServer extends Device {
     @Override
     public String generateDockerfile() {
         StringBuilder dockerfile = new StringBuilder();
-        dockerfile.append("FROM ").append(this.baseImage).append("\n\n");
+        
+        dockerfile.append("FROM httpd:2.4\n\n");
 
-        dockerfile.append("RUN apt-get update && apt-get install -y \\\n");
-        for (int i = 0; i < getPackages().size(); i++) {
-            dockerfile.append("    ").append(getPackages().get(i));
-            if (i < getPackages().size() - 1) {
-                dockerfile.append(" \\\n");
-            } else {
-                dockerfile.append(" \\\n    && apt-get clean\n\n");
-            }
-        }
+        dockerfile.append("# Copy website content into the default web root\n");
+        dockerfile.append("COPY web/ /usr/local/apache2/htdocs/\n\n");
 
-        dockerfile.append("WORKDIR /var/www/html\n");
+        dockerfile.append("# Expose HTTP port\n");
+        dockerfile.append("EXPOSE 80\n\n");
 
-        // Expose service ports
-        for (String service : getServices()) {
-            if (servicePorts.containsKey(service)) {
-                int port = servicePorts.get(service);
-                dockerfile.append("EXPOSE ").append(port).append("\n");
-            }
-        }
-
-        dockerfile.append("\n");
-
-        // Start Apache in the foreground
-        dockerfile.append("CMD [\"apache2ctl\", \"-D\", \"FOREGROUND\"]\n");
+        dockerfile.append("# Start Apache in the foreground\n");
+        dockerfile.append("CMD [\"httpd-foreground\"]\n");
 
         return dockerfile.toString();
     }
+
 
     @Override
     public void writeDockerfileToFile(Path filePath) {
@@ -72,6 +60,22 @@ public class WebServer extends Device {
             Path dockerfilePath = deviceDir.resolve("Dockerfile");
             Files.createDirectories(deviceDir);
             Files.writeString(dockerfilePath, dockerfileContent);
+            Path src = Paths.get("network_sim/src/main/resources/web");
+            Path dest = deviceDir.resolve("web");
+            Files.createDirectories(dest);
+            Files.walk(src).forEach(source -> {
+                try {
+                    Path target = dest.resolve(src.relativize(source));
+                    if (Files.isDirectory(source)) {
+                        Files.createDirectories(target);
+                    } else {
+                        Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+                    }
+            } catch (IOException e) {
+                System.err.println("Error copying file: " + e.getMessage());
+            }
+            });
+
         } catch (IOException e) {
             System.err.println("Error writing Dockerfile: " + e.getMessage());
         }

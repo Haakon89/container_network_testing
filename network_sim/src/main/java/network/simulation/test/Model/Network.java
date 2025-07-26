@@ -1,6 +1,8 @@
 package network.simulation.test.Model;
 
 import java.util.ArrayList;
+
+import network.simulation.test.Model.Nodes.DNSServer;
 import network.simulation.test.Model.Nodes.Device;
 
 public class Network {
@@ -158,10 +160,11 @@ public class Network {
      * @return a string representation of the Docker Compose configuration
      */
     public String getComposeInfo() {
+        Device dns = hasDNS();
         StringBuilder sb = new StringBuilder();
         for (Device device : this.devicesInNetwork) {
             sb.append("  ").append(device.getName()).append(":\n");
-            sb.append("    build : ./" + device.getName() + "\n");
+            sb.append("    build: ./" + device.getName() + "\n");
             sb.append("    container_name: ").append(device.getName()).append("\n");
             /*
             if (device.getStartupCommand() != null && !device.getStartupCommand().isBlank()) {
@@ -178,10 +181,27 @@ public class Network {
             */
             sb.append("    networks:\n");
             sb.append("      ").append(this.name).append(":\n");
-            sb.append("        ipv4_address: ").append(device.getIpAddress()).append("\n\n");
+            sb.append("        ipv4_address: ").append(device.getIpAddress()).append("\n");
+            if (dns != null && device != dns) {
+                sb.append("    dns:\n");
+                sb.append("      - " + dns.getIpAddress()).append("\n\n");
+            }
+            else {
+                sb.append("\n");
+            }
+            
         }
 
         return sb.toString();
+    }
+
+    public Device hasDNS() {
+        for (Device device : this.devicesInNetwork) {
+            if (device instanceof DNSServer) {
+                return device;
+            }
+        }
+        return null;
     }
 
     @Override
