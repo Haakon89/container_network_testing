@@ -16,6 +16,7 @@ import network.simulation.test.Model.Nodes.CustomDevice;
 import network.simulation.test.Model.Nodes.DNSServer;
 import network.simulation.test.Model.Nodes.Device;
 import network.simulation.test.Model.Nodes.DeviceFactory;
+import network.simulation.test.UtilityClasses.FileWriter;
 import network.simulation.test.UtilityClasses.ProjectLoader;
 import network.simulation.test.UtilityClasses.ProjectSaver;
 
@@ -179,38 +180,6 @@ public class Model implements IModelView, IModelController {
         return null; // Device not found
     }
 
-    /**
-     * Generates a Docker Compose file for the current model.
-     * It includes all networks and their devices, along with their configurations.
-     * The file is written to the specified path.
-     * @param path the path where the docker-compose.yml file will be created
-     */
-    public void generateDockerCompose(Path path) {
-        StringBuilder compose = new StringBuilder();
-        compose.append("services:\n");
-
-        for (Network network : networks.values()) {
-            compose.append(network.getComposeInfo());
-        }
-
-        compose.append("networks:\n");
-
-        for (Network network : networks.values()) {
-            compose.append("  ").append(network.getName()).append(":\n");
-            compose.append("    driver: bridge\n");
-            compose.append("    ipam:\n");
-            compose.append("      config:\n");
-            compose.append("        - subnet: ").append(network.getAdressRange()).append("\n");
-            compose.append("          gateway: ").append(network.getGateway()).append("\n");
-        }
-
-        try {
-            Files.writeString(path, compose.toString());
-        } catch (IOException e) {
-            System.err.println("Error writing docker-compose.yml: " + e.getMessage());
-        }
-    }
-
     @Override
     public void buildProject() {
         for (Device device : devices.values()) {          
@@ -224,84 +193,14 @@ public class Model implements IModelView, IModelController {
                 }
             }
         }
-        generateDockerCompose(Paths.get(this.path + "/docker-compose.yml"));
+        FileWriter.generateDockerCompose(Paths.get(this.path + "/docker-compose.yml"), this.networks);
     }
     
-    public static String writeForwardZone(ArrayList<Device> devicesInNetwork, String domain, Path path) throws IOException {
-        Path zonePath = Paths.get(path + "/zones/");
-        Files.createDirectories(zonePath);
-        StringBuilder zone = new StringBuilder();
-        zone.append("$TTL 604800\n");
-        zone.append("@ IN SOA ns1.").append(domain + ".local").append(". admin.").append(domain + ".local").append(". (\n");
-        zone.append("    2     ; Serial\n");
-        zone.append("    604800 ; Refresh\n");
-        zone.append("    86400  ; Retry\n");
-        zone.append("    2419200 ; Expire\n");
-        zone.append("    604800 ) ; Negative Cache TTL\n\n");
-
-        zone.append("@ IN NS ns1.").append(domain).append(".\n");
-
-        for (Device d : devicesInNetwork) {
-            if (d.getIpAddress() != null) {
-                zone.append(d.getDNSLabel()).append(" IN A ").append(d.getIpAddress()).append("\n");
-            }
-        }
-        System.out.println(zone.toString());
-        String title = "db." + domain + ".local";
-        Files.writeString(zonePath.resolve(title), zone.toString());
-        System.out.println("Wrote zone file to: " + zonePath.toAbsolutePath());
-        return title;
-    }
-
-    public static String writeReverseZone(ArrayList<Device> devices, String domain, Path path, String addressRange) throws IOException {
-        Path zonePath = Paths.get(path + "/zones/");
-        Files.createDirectories(zonePath);
-        StringBuilder zone = new StringBuilder();
-        zone.append("$TTL 604800\n");
-        zone.append("@ IN SOA ns1." + domain + ".local. admin." + domain + ".local. (\n");
-        zone.append("    2     ; Serial\n");
-        zone.append("    604800 ; Refresh\n");
-        zone.append("    86400  ; Retry\n");
-        zone.append("    2419200 ; Expire\n");
-        zone.append("    604800 ) ; Negative Cache TTL\n\n");
-    
-        zone.append("@ IN NS ns1." + domain + ".local.\n");
-    
-        for (Device d : devices) {
-            String ip = d.getIpAddress();
-            if (ip != null) {
-                String lastOctet = ip.substring(ip.lastIndexOf('.') + 1);
-                zone.append(lastOctet).append(" IN PTR ").append(d.getDNSLabel()).append("." + domain + ".local.\n");
-            }
-        }
-        String[] parts = addressRange.split("/");
-        String[] octets = parts[0].split("\\.");
-
-        // For /24, we reverse the first 3 octets
-        String title = "db." + octets[2] + "." + octets[1] + "." + octets[0] + ".in-addr.arpa";
-        System.out.println(zone.toString());
-        Files.writeString(zonePath.resolve(title), zone.toString());
-        System.out.println("Wrote zone file to: " + zonePath.toAbsolutePath());
-        return title;
-    }
- 
-    public static void writeNamedConfLocal(String domain, Path path, String filenameOne, String filenameTWO) throws IOException {
-        StringBuilder config = new StringBuilder();
-        config.append("zone \"" + domain + ".local\" {\n");
-        config.append("    type master;\n");
-        config.append("    file \"/etc/bind/zones/" + filenameOne + "\";\n");
-        config.append("};\n\n");
-    
-        config.append("zone \"" + filenameTWO.substring(3) + "\" {\n");
-        config.append("    type master;\n");
-        config.append("    file \"/etc/bind/zones/" + filenameTWO + "\";\n");
-        config.append("};\n");
-        System.out.println(config.toString());
-        Files.writeString(path.resolve("named.conf.local"), config.toString());
-        System.out.println("Wrote zone file to: " + path.toAbsolutePath());
-    }
-    
-    public void generateDNSFiles() throws IOException {
+    /**
+     * generates the neccesary DNS files to handle the services on the local network
+     * @throws IOException
+     */
+    private void generateDNSFiles() throws IOException {
         for (Network network : networks.values()) {             
             Path path = Paths.get(this.path + "/dns1/");
             Files.createDirectories(path);
@@ -309,9 +208,9 @@ public class Model implements IModelView, IModelController {
             Files.createDirectories(zonePath);
             String domain = network.getName();
             ArrayList<Device> devicesInNetwork = network.getDevicesInNetwork();
-            String filenameOne = writeForwardZone(devicesInNetwork, domain, path);
-            String filenameTwo = writeReverseZone(devicesInNetwork, domain, path, network.getAdressRange());
-            writeNamedConfLocal(domain, path, filenameOne, filenameTwo);
+            String filenameOne = FileWriter.writeForwardZone(devicesInNetwork, domain, path);
+            String filenameTwo = FileWriter.writeReverseZone(devicesInNetwork, domain, path, network.getAdressRange());
+            FileWriter.writeNamedConfLocal(domain, path, filenameOne, filenameTwo);
             
         }
     }
