@@ -14,6 +14,7 @@ public class DeviceFactory {
         deviceConstructors.put("standard", () -> new StandardDevice(generateName("standard")));
         deviceConstructors.put("dns", () -> new DNSServer(generateName("dns")));
         deviceConstructors.put("web", () -> new WebServer(generateName("web")));
+        deviceConstructors.put("printer", () -> new PrinterDevice(generateName("printer")));
         // Add more device types here
     }
 

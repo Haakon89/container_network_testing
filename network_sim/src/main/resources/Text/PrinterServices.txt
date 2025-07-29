@@ -1,0 +1,7 @@
+cups,
+ipp,
+lpd,
+raw9100,
+snmp,
+avahi,
+ssh

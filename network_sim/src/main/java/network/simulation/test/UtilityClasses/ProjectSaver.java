@@ -11,6 +11,7 @@ import com.google.gson.GsonBuilder;
 import network.simulation.test.Model.Model;
 import network.simulation.test.Model.Nodes.DNSServer;
 import network.simulation.test.Model.Nodes.Device;
+import network.simulation.test.Model.Nodes.PrinterDevice;
 import network.simulation.test.Model.Nodes.StandardDevice;
 import network.simulation.test.Model.Nodes.WebServer;
 
@@ -34,7 +35,8 @@ public class ProjectSaver {
             .of(Device.class, "type")
             .registerSubtype(StandardDevice.class, "standard")
             .registerSubtype(DNSServer.class, "dns")
-            .registerSubtype(WebServer.class, "webserver");
+            .registerSubtype(WebServer.class, "webserver")
+            .registerSubtype(PrinterDevice.class, "printer");
         
         return new GsonBuilder()
             .registerTypeAdapterFactory(adapter)

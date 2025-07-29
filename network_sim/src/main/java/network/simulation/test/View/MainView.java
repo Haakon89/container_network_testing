@@ -116,7 +116,7 @@ public class MainView implements IView {
      * If custom, prompts for device details and calls the controller to add a custom device.
      */
     private void handleAddDevice() {
-        ChoiceDialog<String> choice = new ChoiceDialog<>("Standard", "Standard", "DNS", "Web", "Custom");
+        ChoiceDialog<String> choice = new ChoiceDialog<>("Standard", "Standard", "DNS", "Web", "Printer", "Custom");
         choice.setTitle("Add Device");
         choice.setHeaderText("Choose device type:");
         choice.setContentText("Type:");
