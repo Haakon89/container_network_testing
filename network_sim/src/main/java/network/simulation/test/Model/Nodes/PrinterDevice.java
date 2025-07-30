@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,20 +16,19 @@ public class PrinterDevice extends Device {
     public PrinterDevice(String name) {
         super(name);
         this.DNSLabel = name;
-        this.setBaseImage("ubuntu:latest");
+        this.setBaseImage("debian:bookworm");
 
         // Printer-specific packages and services
         installPackagesFromFile("network_sim/src/main/resources/Text/PrinterPackages.txt");
         installServicesFromFile("network_sim/src/main/resources/Text/PrinterServices.txt");
 
         this.servicePorts = new HashMap<>();
-        servicePorts.put("cups", 631);         // IPP
-        servicePorts.put("ipp", 631);          // IPP (alias)
+        servicePorts.put("cups", 631);  
+        /*       // IPP
         servicePorts.put("lpd", 515);          // LPD
         servicePorts.put("raw9100", 9100);     // JetDirect/Raw printing
         servicePorts.put("avahi", 5353);       // Bonjour/mDNS for discovery
-        servicePorts.put("snmp", 161);         // Printer status queries
-        servicePorts.put("ssh", 22);           // For remote administration (optional)
+        */
         
     }
 
@@ -46,6 +46,17 @@ public class PrinterDevice extends Device {
                 dockerfile.append(" \\\n    && apt-get clean\n\n");
             }
         }
+        /*
+        dockerfile.append("RUN mkdir /var/run/sshd && \\").append("\n");
+        dockerfile.append("    echo 'root:root' | chpasswd && \\").append("\n");
+        dockerfile.append("    sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config").append("\n");
+        */
+        dockerfile.append("RUN mkdir -p /var/run/cups /run/cups /etc/cups/ppd").append("\n\n");
+        dockerfile.append(("COPY printer_config/entrypoint.sh /entrypoint.sh\n"));
+        dockerfile.append(("COPY printer_config/cupsd.conf /etc/cups/cupsd.conf\n\n"));
+        dockerfile.append("RUN chmod +x /entrypoint.sh\n\n");
+        
+        dockerfile.append("ENTRYPOINT [\"/usr/bin/tini\", \"--\"]").append("\n\n");
 
         dockerfile.append("WORKDIR /home/printer_user\n");
         ArrayList<String> services = getServices();
@@ -58,10 +69,12 @@ public class PrinterDevice extends Device {
             }
         }
         dockerfile.append("\n");
-        
+        /*
         dockerfile.append("CMD [\"bash\", \"-c\", ");
         dockerfile.append("\"mkdir -p /var/spool/fakeprinter && while true; do nc -lk -p 9100 > /var/spool/fakeprinter/job_$(date +%s).txt; done\"");
         dockerfile.append("]\n");
+        */
+        dockerfile.append("CMD [\"/entrypoint.sh\"]");
         return dockerfile.toString();
     }
 
@@ -74,6 +87,21 @@ public class PrinterDevice extends Device {
             Path dockerfilePath = deviceDir.resolve("Dockerfile");
             Files.createDirectories(deviceDir);
             Files.writeString(dockerfilePath, dockerfileContent);
+            Path src = Paths.get("network_sim/src/main/resources/printer");
+            Path dest = deviceDir.resolve("printer_config");
+            Files.createDirectories(dest);
+            Files.walk(src).forEach(source -> {
+                try {
+                    Path target = dest.resolve(src.relativize(source));
+                    if (Files.isDirectory(source)) {
+                        Files.createDirectories(target);
+                    } else {
+                        Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+                    }
+                } catch (IOException e) {
+                    System.err.println("Error copying file: " + e.getMessage());
+                }
+            });
         } catch (IOException e) {
             System.err.println("Error writing Dockerfile: " + e.getMessage());
         }
