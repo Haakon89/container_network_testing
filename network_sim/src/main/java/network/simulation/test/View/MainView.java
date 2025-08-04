@@ -16,7 +16,6 @@ import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.DirectoryChooser;
-import javafx.util.Pair;
 import network.simulation.test.Controller.IControllerView;
 import network.simulation.test.Model.IModelView;
 import network.simulation.test.Model.Nodes.Device;
@@ -27,7 +26,7 @@ public class MainView implements IView {
     private final TreeItem<String> rootItem;
     private final VBox detailPanel = new VBox();
     private final Map<String, TreeItem<String>> networkItems = new HashMap<>();
-
+    private ButtonHandler btnHandler;
     private IControllerView controller;
     private IModelView model;
 
@@ -55,10 +54,10 @@ public class MainView implements IView {
         Button buildProjectBtn = new Button("Build");
         Button runProjectBtn = new Button("Run");
 
-        addNetworkBtn.setOnAction(e -> handleAddNetwork());
-        addDeviceBtn.setOnAction(e -> handleAddDevice());
-        buildProjectBtn.setOnAction(e -> handleBuildProject());
-        runProjectBtn.setOnAction(e -> handleRunProject());
+        addNetworkBtn.setOnAction(e -> this.btnHandler.handleAddNetwork());
+        addDeviceBtn.setOnAction(e -> this.btnHandler.handleAddDevice());
+        buildProjectBtn.setOnAction(e -> this.btnHandler.handleBuildProject());
+        runProjectBtn.setOnAction(e -> runProject());
 
         VBox treeWithButtons = new VBox(projectTree, addNetworkBtn, addDeviceBtn, buildProjectBtn, runProjectBtn);
         treeWithButtons.setPadding(new Insets(10));
@@ -73,10 +72,10 @@ public class MainView implements IView {
                     setContextMenu(null);
                 } else {
                     setText(item);
-                    if (!item.startsWith("Network:") && !item.equals("Unassigned Nodes")) {
+                    if (!item.startsWith("Network:") && !item.equals("Unassigned:")) {
                         setContextMenu(createDeviceContextMenu(getTreeItem()));
                     } else {
-                        setContextMenu(null);
+                        setContextMenu(createNetworkContextMenu(getTreeItem()));
                     }
                 }
             }
@@ -87,7 +86,7 @@ public class MainView implements IView {
         detailPanel.setSpacing(10);
         detailPanel.setPrefWidth(400);
         root.setRight(detailPanel);
-        setController(controller);
+        setControllerAndHandler(controller);
     }
 
     private void displayDetailsFor(TreeItem<String> selected) {
@@ -107,169 +106,6 @@ public class MainView implements IView {
                 detailPanel.getChildren().add(detailLabel);
             }
         }
-    }
-
-    /**
-     * Handles adding a new device to the project.
-     * Prompts the user to choose between a standard or custom device.
-     * If standard, calls the controller to add a standard device.
-     * If custom, prompts for device details and calls the controller to add a custom device.
-     */
-    private void handleAddDevice() {
-        ChoiceDialog<String> choice = new ChoiceDialog<>("Standard", "Standard", "DNS", "Web", "Printer", "Custom");
-        choice.setTitle("Add Device");
-        choice.setHeaderText("Choose device type:");
-        choice.setContentText("Type:");
-
-        Optional<String> result = choice.showAndWait();
-        result.ifPresent(type -> {
-            if (!type.equals("Custom")) {
-                controller.onClick("createDevice", type.toLowerCase());
-            } else {
-                // Prompt for custom device info
-                Dialog<Pair<String, String>> dialog = new Dialog<>();
-                dialog.setTitle("Custom Device");
-                dialog.setHeaderText("Enter device details");
-
-                ButtonType createButtonType = new ButtonType("Create", ButtonBar.ButtonData.OK_DONE);
-                dialog.getDialogPane().getButtonTypes().addAll(createButtonType, ButtonType.CANCEL);
-
-                GridPane grid = new GridPane();
-                grid.setHgap(10);
-                grid.setVgap(10);
-                grid.setPadding(new Insets(20, 150, 10, 10));
-
-                TextField nameField = new TextField();
-                TextField imageField = new TextField();
-
-                grid.add(new Label("Device name:"), 0, 0);
-                grid.add(nameField, 1, 0);
-                grid.add(new Label("Base image (e.g. ubuntu:22.04):"), 0, 1);
-                grid.add(imageField, 1, 1);
-
-                dialog.getDialogPane().setContent(grid);
-
-                dialog.setResultConverter(dialogButton -> {
-                    if (dialogButton == createButtonType) {
-                        return new Pair<>(nameField.getText(), imageField.getText());
-                    }
-                    return null;
-                });
-
-                Optional<Pair<String, String>> deviceInfo = dialog.showAndWait();
-                deviceInfo.ifPresent(info -> {
-                    controller.onClick("createCustomDevice", info.getKey(), info.getValue());
-                });
-            }
-        });
-        updateDisplay();
-    }
-
-    /**
-     * Handles adding a new network to the project.
-     * Prompts the user to choose between a standard or custom network.
-     * If standard, calls the controller to add a standard network.
-     * If custom, prompts for network details and calls the controller to add a custom network.
-     */
-    private void handleAddNetwork() {
-        ChoiceDialog<String> choice = new ChoiceDialog<>("Standard", "Standard", "Custom");
-        choice.setTitle("Add Network");
-        choice.setHeaderText("Choose network type:");
-        choice.setContentText("Type:");
-
-        Optional<String> result = choice.showAndWait();
-        result.ifPresent(type -> {
-            if (type.equals("Standard")) {
-                controller.onClick("addStandardNetwork");
-            } else {
-                // Prompt for custom network info
-                Dialog<Pair<String, String>> dialog = new Dialog<>();
-                dialog.setTitle("Custom Network");
-                dialog.setHeaderText("Enter network details");
-
-                ButtonType createButtonType = new ButtonType("Create", ButtonBar.ButtonData.OK_DONE);
-                dialog.getDialogPane().getButtonTypes().addAll(createButtonType, ButtonType.CANCEL);
-
-                GridPane grid = new GridPane();
-                grid.setHgap(10);
-                grid.setVgap(10);
-                grid.setPadding(new Insets(20, 150, 10, 10));
-
-                TextField nameField = new TextField();
-                TextField rangeField = new TextField();
-
-                grid.add(new Label("Network name:"), 0, 0);
-                grid.add(nameField, 1, 0);
-                grid.add(new Label("Address range (e.g. 192.168.1.0/24):"), 0, 1);
-                grid.add(rangeField, 1, 1);
-
-                dialog.getDialogPane().setContent(grid);
-
-                dialog.setResultConverter(dialogButton -> {
-                    if (dialogButton == createButtonType) {
-                        return new Pair<>(nameField.getText(), rangeField.getText());
-                    }
-                    return null;
-                });
-
-                Optional<Pair<String, String>> networkInfo = dialog.showAndWait();
-                networkInfo.ifPresent(info -> {
-                    controller.onClick("addCustomNetwork", info.getKey(), info.getValue());
-                });
-            }
-        });
-        updateDisplay();
-    }
-
-    /**
-     * Handles building the project.
-     * Calls the controller to perform the build action which generates Dockerfiles for the devices and a docker-compose.
-     */
-    private void handleBuildProject() {
-        controller.onClick("buildProject");
-    }
-
-    public void handleRunProject() {
-        RunPane runPane = new RunPane(this.model);
-        SplitPane splitPane = new SplitPane();
-        splitPane.setOrientation(Orientation.HORIZONTAL);
-        splitPane.getItems().addAll(runPane, detailPanel);
-        splitPane.setDividerPositions(0.7);  // 70% to RunPane, 30% to RightPane
-
-        root.setCenter(splitPane);  // Set the SplitPane as the only center node
-        Task<Void> task = new Task<>() {
-            @Override
-            protected Void call() throws Exception {
-                Path path = Path.of(model.getPath());
-                ProcessBuilder pb = new ProcessBuilder("docker-compose", "up", "--build", "-d");
-                pb.directory(path.toFile());
-                pb.redirectErrorStream(true);
-
-                try {
-                    Process process = pb.start();
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        String finalLine = line;
-                        Platform.runLater(() -> runPane.appendLog(finalLine + "\n"));
-                    }
-                    int exitCode = process.waitFor();
-                    if (exitCode == 0) {
-                        Platform.runLater(runPane::markComplete);
-                    } else {
-                        Platform.runLater(() -> runPane.markError("Docker exited with code " + exitCode + "\n"));
-                    }
-                } catch (IOException | InterruptedException e) {
-                    Platform.runLater(() -> runPane.markError("Error: " + e.getMessage() + "\n"));
-                }
-
-                return null;
-            }
-        };
-
-        Thread backgroundThread = new Thread(task);
-        backgroundThread.setDaemon(true);
-        backgroundThread.start();
     }
 
     private void createMenuBar(VBox top) {
@@ -321,7 +157,6 @@ public class MainView implements IView {
 
         menuBar.getMenus().addAll(fileMenu, editMenu);
 
-        // ✅ This is the ONLY correct way now
         top.getChildren().add(menuBar);
     }
 
@@ -330,8 +165,9 @@ public class MainView implements IView {
     }
 
     @Override
-    public void setController(IControllerView controller) {
+    public void setControllerAndHandler(IControllerView controller) {
         this.controller = controller;
+        this.btnHandler = new ButtonHandler(model, this, this.controller);
     }
 
     @Override
@@ -348,7 +184,7 @@ public class MainView implements IView {
      * It creates a tree structure where each network is a parent item containing its devices as children.
      * Additionally, it includes an "Unassigned Devices" section for devices not assigned to any network.
      */
-    private void updateDisplay() {
+    protected void updateDisplay() {
         Set<String> currentNetworks = new HashSet<>(model.getNetworkNames());
 
         // Remove stale network items
@@ -388,145 +224,84 @@ public class MainView implements IView {
                     networkItem.getChildren().add(new TreeItem<>(device.getName()));
                 }
             }
-    }
+        }
 
-    // Handle unassigned devices (optional: make it smart too)
-    rootItem.getChildren().removeIf(item -> item.getValue().equals("Unassigned Devices"));
-    TreeItem<String> unassignedItem = new TreeItem<>("Unassigned Devices");
-    for (Device device : model.getUnassignedDevices()) {
-        unassignedItem.getChildren().add(new TreeItem<>(device.getName()));
-    }
-    rootItem.getChildren().add(unassignedItem);
+        // Handle unassigned devices (optional: make it smart too)
+        rootItem.getChildren().removeIf(item -> item.getValue().equals("Unassigned Devices"));
+        TreeItem<String> unassignedItem = new TreeItem<>("Unassigned Devices");
+        for (Device device : model.getUnassignedDevices()) {
+            unassignedItem.getChildren().add(new TreeItem<>(device.getName()));
+        }
+        rootItem.getChildren().add(unassignedItem);
     }
 
     private ContextMenu createDeviceContextMenu(TreeItem<String> deviceItem) {
         MenuItem delete = new MenuItem("Delete Device");
         MenuItem edit = new MenuItem("Edit Device");
         MenuItem addToNetwork = new MenuItem("Add to Network");
-        delete.setOnAction(e -> handleDeleteDevice(deviceItem));
-        edit.setOnAction(e -> handleEditDevice(deviceItem));
-        addToNetwork.setOnAction(e -> handleAddToNetwork(deviceItem));
+        delete.setOnAction(e -> this.btnHandler.handleDeleteDevice(deviceItem));
+        edit.setOnAction(e -> this.btnHandler.handleEditDevice(deviceItem));
+        addToNetwork.setOnAction(e -> this.btnHandler.handleAddToNetwork(deviceItem));
 
         return new ContextMenu(delete, addToNetwork, edit);
     }
 
-    /**
-     * Result class for the device edit dialog.
-     * Contains the edited device details such as name, IP, OS, and services.
-     */
-    public class DeviceEditResult {
-        private final String name, os, services, isEntryPoint;
-    
-        public DeviceEditResult(String name, String os, String services, String isEntryPoint) {
-            this.name = name;
-            this.os = os;
-            this.services = services;
-            this.isEntryPoint = isEntryPoint;
-        }
-    
-        public String getName() { return name; }
-        public String getOs() { return os; }
-        public String getServices() { return services; }
-        public String getIsEntryPoint() { return isEntryPoint; }
+    private ContextMenu createNetworkContextMenu(TreeItem<String> networkItem) {
+        MenuItem delete = new MenuItem("Delete Network");
+        MenuItem edit = new MenuItem("Edit Network");
+        MenuItem addDevice = new MenuItem("Add Device");
+        MenuItem moveDevices = new MenuItem("Move Devices");
+
+        delete.setOnAction(e -> this.btnHandler.handleDeleteNetwork(networkItem));
+        edit.setOnAction(e -> this.btnHandler.handleEditeNetwork(networkItem));
+        addDevice.setOnAction(e -> this.btnHandler.handleAddDeviceHere(networkItem));
+        moveDevices.setOnAction(e -> this.btnHandler.handleMoveDevices(networkItem));
+        return new ContextMenu(delete, edit, addDevice, moveDevices);
     }
 
-    /**
-     * Handles editing a device.
-     * Opens a dialog to edit the device details such as name, IP, OS, and services.
-     * On saving, it calls the controller to update the device and refreshes the display.
-     *
-     * @param deviceItem The TreeItem representing the device to be edited.
-     */
-    private void handleEditDevice(TreeItem<String> deviceItem) {
-        Dialog<DeviceEditResult> dialog = new Dialog<>();
-        dialog.setTitle("Edit Device");
-        dialog.setHeaderText("Edit device details");
+    public void runProject() {
+        RunPane runPane = new RunPane(this.model);
+        SplitPane splitPane = new SplitPane();
+        splitPane.setOrientation(Orientation.HORIZONTAL);
+        splitPane.getItems().addAll(runPane, detailPanel);
+        splitPane.setDividerPositions(0.7);  // 70% to RunPane, 30% to RightPane
 
-        ButtonType saveButtonType = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
+        root.setCenter(splitPane);  // Set the SplitPane as the only center node
+        Task<Void> task = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                Path path = Path.of(model.getPath());
+                ProcessBuilder pb = new ProcessBuilder("docker-compose", "up", "--build", "-d");
+                pb.directory(path.toFile());
+                pb.redirectErrorStream(true);
 
-        // Create input fields
-        TextField nameField = new TextField(deviceItem.getValue());
-        TextField osField = new TextField();
-        TextField servicesField = new TextField();
-        TextField entryPointField = new TextField();
+                try {
+                    Process process = pb.start();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        String finalLine = line;
+                        Platform.runLater(() -> runPane.appendLog(finalLine + "\n"));
+                    }
+                    int exitCode = process.waitFor();
+                    if (exitCode == 0) {
+                        Platform.runLater(runPane::markComplete);
+                    } else {
+                        Platform.runLater(() -> runPane.markError("Docker exited with code " + exitCode + "\n"));
+                    }
+                } catch (IOException | InterruptedException e) {
+                    Platform.runLater(() -> runPane.markError("Error: " + e.getMessage() + "\n"));
+                }
 
-        GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-        grid.setPadding(new Insets(20, 150, 10, 10));
-
-        grid.add(new Label("Device name:"), 0, 0);
-        grid.add(nameField, 1, 0);
-        grid.add(new Label("Operating System:"), 0, 2);
-        grid.add(osField, 1, 2);
-        grid.add(new Label("Services (comma-separated):"), 0, 3);
-        grid.add(servicesField, 1, 3);
-        grid.add(new Label("Is this the entry-point? (true or false)"), 0, 4);
-        grid.add(entryPointField, 1, 4);
-
-        dialog.getDialogPane().setContent(grid);
-
-        Platform.runLater(nameField::requestFocus);
-        
-        // Convert result when Save is pressed
-        dialog.setResultConverter(dialogButton -> {
-            if (dialogButton == saveButtonType) {
-                return new DeviceEditResult(
-                    nameField.getText(),
-                    osField.getText(),
-                    servicesField.getText(),
-                    entryPointField.getText()
-                );
+                return null;
             }
-            return null;
-        });
+        };
 
-        Optional<DeviceEditResult> result = dialog.showAndWait();
-
-        result.ifPresent(edited -> {
-            controller.onClick("editDevice",
-                deviceItem.getValue(), // old name
-                edited.getName(),      // new name
-                edited.getOs(),
-                edited.getServices(),
-                edited.getIsEntryPoint()
-            );
-            updateDisplay();
-        });
+        Thread backgroundThread = new Thread(task);
+        backgroundThread.setDaemon(true);
+        backgroundThread.start();
     }
 
-    /**
-     * Handles adding a device to a network.
-     * Prompts the user to choose a network from the available networks.
-     * On selection, it calls the controller to assign the device to the selected network and refreshes the display.
-     *
-     * @param deviceItem The TreeItem representing the device to be added to a network.
-     */
-    private void handleAddToNetwork(TreeItem<String> deviceItem) {
-        List<String> networks = model.getNetworkNames();
-        ChoiceDialog<String> dialog = new ChoiceDialog<>(networks.get(0), networks);
-        dialog.setTitle("Assign to Network");
-        dialog.setHeaderText("Choose a network:");
-
-        dialog.showAndWait().ifPresent(network -> {
-            controller.onClick("assignDeviceToNetwork", deviceItem.getValue(), network);
-            updateDisplay();
-        });
-    }
-
-    /**
-     * Handles deleting a device from the project.
-     * Calls the controller to delete the device and refreshes the display.
-     *
-     * @param deviceItem The TreeItem representing the device to be deleted.
-     */
-    private void handleDeleteDevice(TreeItem<String> deviceItem) {
-        String deviceName = deviceItem.getValue();
-        String deviceHome = model.findDevice(deviceName);
-        controller.onClick("deleteDevice", deviceName, deviceHome);
-        updateDisplay();
-    }
 
     @Override
     public void closeProject() {

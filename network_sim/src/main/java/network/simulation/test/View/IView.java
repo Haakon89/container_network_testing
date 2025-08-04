@@ -22,5 +22,5 @@ public interface IView {
      * This allows the view to communicate with the controller for actions like creating networks, devices, etc.
      * @param mainController the controller that will handle user interactions
      */
-    public void setController(IControllerView mainController);
+    public void setControllerAndHandler(IControllerView mainController);
 }

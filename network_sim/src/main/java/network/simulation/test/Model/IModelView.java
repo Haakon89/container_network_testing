@@ -23,6 +23,12 @@ public interface IModelView {
      * @return a list of network names
      */
     public ArrayList<String> getNetworkNames();
+
+    /**
+     * Gets the names of all the devices in the model.
+     * @return a list of device names
+     */
+    public ArrayList<String> getDeviceNames();
     
     /**
      * Gets the names of all unassigned devices in the model.

@@ -29,6 +29,7 @@ public class Model implements IModelView, IModelController {
     HashMap<String, Network> networks;
     HashMap<String, Device> devices;
     ArrayList<String> networkNames;
+    ArrayList<String> deviceNames;
     transient ArrayList<Device> unassignedDevices;
     int devicesCreated;
     String path;
@@ -39,6 +40,7 @@ public class Model implements IModelView, IModelController {
         this.networks = new HashMap<>();
         this.devices = new HashMap<>();
         this.networkNames = new ArrayList<>();
+        this.deviceNames = new ArrayList<>();
         this.unassignedDevices = new ArrayList<>();
         this.devicesCreated = 0;
         this.path = "./";
@@ -88,20 +90,28 @@ public class Model implements IModelView, IModelController {
         Device device = new CustomDevice(lowerCaseName, baseImage);
         this.unassignedDevices.add(device);
         this.devices.put(lowerCaseName, device);
+        this.deviceNames.add(name);
         this.devicesCreated++;
     }
 
     @Override
     public void createDevice(String deviceType) {
         Device newDevice = DeviceFactory.buildDevice(deviceType);
+        String name = newDevice.getName();
         this.unassignedDevices.add(newDevice);
-        this.devices.put(newDevice.getName(), newDevice);
+        this.devices.put(name, newDevice);
+        this.deviceNames.add(name);
         this.devicesCreated++;
     }
     
     @Override
     public ArrayList<String> getNetworkNames() {
         return this.networkNames;
+    }
+
+    @Override
+    public ArrayList<String> getDeviceNames() {
+        return this.deviceNames;
     }
 
     @Override
@@ -143,6 +153,7 @@ public class Model implements IModelView, IModelController {
                 if (deviceToRemove != null) {
                     network.removeDevice(deviceToRemove);
                     this.devices.remove(name);
+                    this.deviceNames.remove(name);
                 } else {
                     System.out.println("device " + name + " not found in network " + home + ".");
                 }

@@ -30,7 +30,7 @@ public class MainController implements IControllerView, IControllerModel {
         actionMap.put("assignDeviceToNetwork", args -> model.assignDevice(args[0], args[1]));
         actionMap.put("editDevice", args -> model.editDevice(args[0], args[1], args[2], args[3], args[4]));
 
-        view.setController(this);
+        view.setControllerAndHandler(this);
     }
 
     public void onClick(String action, String... args) {

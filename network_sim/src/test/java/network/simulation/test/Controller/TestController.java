@@ -111,6 +111,6 @@ public class TestController {
             //updateDisplay();
         }
         @Override public void closeProject() {}
-        @Override public void setController(IControllerView controller) {}
+        @Override public void setControllerAndHandler(IControllerView controller) {}
     }
 }
