@@ -29,6 +29,9 @@ public class MainController implements IControllerView, IControllerModel {
         actionMap.put("deleteDevice", args -> model.deleteDevice(args[0], args[1]));
         actionMap.put("assignDeviceToNetwork", args -> model.assignDevice(args[0], args[1]));
         actionMap.put("editDevice", args -> model.editDevice(args[0], args[1], args[2], args[3], args[4]));
+        actionMap.put("deleteNetwork", args -> model.deleteNetwork(args[0]));
+        actionMap.put("editNetwork", args -> model.editNetwork(args[0], args[1], args[2]));
+        actionMap.put("moveDevices", args -> model.moveDevices(args[0], args[1]));
 
         view.setControllerAndHandler(this);
     }

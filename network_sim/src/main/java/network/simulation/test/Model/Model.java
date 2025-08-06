@@ -22,18 +22,17 @@ import network.simulation.test.UtilityClasses.ProjectSaver;
 
 public class Model implements IModelView, IModelController {
 
-    
-
-
-    String name;
-    HashMap<String, Network> networks;
-    HashMap<String, Device> devices;
-    ArrayList<String> networkNames;
-    ArrayList<String> deviceNames;
+    protected String name;
+    protected HashMap<String, Network> networks;
+    protected HashMap<String, Device> devices;
+    protected ArrayList<String> networkNames;
+    protected ArrayList<String> deviceNames;
     transient ArrayList<Device> unassignedDevices;
-    int devicesCreated;
-    String path;
-    String entryPoint;
+    protected int devicesCreated;
+    protected String path;
+    protected String entryPoint;
+    private DeviceManager deviceManager;
+    private NetworkManager networkManager;
 
     public Model() {
         this.name = "";
@@ -45,6 +44,8 @@ public class Model implements IModelView, IModelController {
         this.devicesCreated = 0;
         this.path = "./";
         this.entryPoint = null;
+        this.deviceManager = new DeviceManager(this);
+        this.networkManager = new NetworkManager(this);
     }
     
     @Override
@@ -60,50 +61,15 @@ public class Model implements IModelView, IModelController {
     public HashMap<String, Network> getNetworks() {
         return this.networks;
     }
+
     public HashMap<String, Device> getDevices() {
         return this.devices;
     }
+
     public int getDevicesCreated() {
         return this.devicesCreated;
     }
 
-    @Override
-    public void createNetwork(String name, String adressRange) {
-        Network network = new Network(name, adressRange);
-        this.networks.put(name, network);
-        this.networkNames.add(name);
-    }
-
-    @Override
-    public void addStandardNetwork() {
-        String number = String.valueOf(networks.size() + 1);
-        String name = "network" + number;
-        String adressRange = "192.168.100.0/24";
-        Network network = new Network(name, adressRange);
-        this.networks.put(name, network);
-        this.networkNames.add(name);
-    }
-
-    @Override
-    public void createCustomDevice(String name, String baseImage) {
-        String lowerCaseName = name.toLowerCase();
-        Device device = new CustomDevice(lowerCaseName, baseImage);
-        this.unassignedDevices.add(device);
-        this.devices.put(lowerCaseName, device);
-        this.deviceNames.add(name);
-        this.devicesCreated++;
-    }
-
-    @Override
-    public void createDevice(String deviceType) {
-        Device newDevice = DeviceFactory.buildDevice(deviceType);
-        String name = newDevice.getName();
-        this.unassignedDevices.add(newDevice);
-        this.devices.put(name, newDevice);
-        this.deviceNames.add(name);
-        this.devicesCreated++;
-    }
-    
     @Override
     public ArrayList<String> getNetworkNames() {
         return this.networkNames;
@@ -113,119 +79,6 @@ public class Model implements IModelView, IModelController {
     public ArrayList<String> getDeviceNames() {
         return this.deviceNames;
     }
-
-    @Override
-    public ArrayList<Device> getDevicesInNetwork(String networkName) {
-        Network network = networks.get(networkName);
-        if (network != null) {
-            return network.getDevicesInNetwork();
-        } else {
-            System.out.println("Network " + networkName + " not found.");
-            return new ArrayList<>();
-        }
-    }
-
-    @Override
-    public ArrayList<Device> getUnassignedDevices() {
-        return this.unassignedDevices;
-    }
-
-    @Override
-    public void deleteDevice(String name, String home) {
-        if (home.equals("unassigned")) {
-            for (Device device : unassignedDevices) {
-                if (device.getName().equals(name)) {
-                    unassignedDevices.remove(device);
-                    this.devices.remove(name);
-                    return;
-                }
-            }
-        } else {
-            Network network = networks.get(home);
-            if (network != null) {
-                Device deviceToRemove = null;
-                for (Device device : network.getDevicesInNetwork()) {
-                    if (device.getName().equals(name)) {
-                        deviceToRemove = device;
-                        break;
-                    }
-                }
-                if (deviceToRemove != null) {
-                    network.removeDevice(deviceToRemove);
-                    this.devices.remove(name);
-                    this.deviceNames.remove(name);
-                } else {
-                    System.out.println("device " + name + " not found in network " + home + ".");
-                }
-            } else {
-                System.out.println("Network " + home + " not found.");
-            }
-        }
-    }
-
-    @Override
-    public void assignDevice(String device, String network) {
-        Device deviceToAssign = this.unassignedDevices.stream()
-            .filter(d -> d.getName().equals(device))
-            .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("Device not found: " + device));
-
-        this.networks.get(network).addDevice(deviceToAssign);
-        this.unassignedDevices.remove(deviceToAssign);
-    }
-    
-    @Override
-    public String findDevice(String name) {
-        for (Device device : unassignedDevices) {
-            if (device.getName().equals(name)) {
-                return "unassigned";
-            }
-        }
-        for (Network network : networks.values()) {
-            for (Device device : network.getDevicesInNetwork()) {
-                if (device.getName().equals(name)) {
-                    return network.getName();
-                }
-            }
-        }
-        return null; // Device not found
-    }
-
-    @Override
-    public void buildProject() {
-        for (Device device : devices.values()) {          
-            device.writeDockerfileToFile(Path.of(this.path));
-            if (device instanceof DNSServer) {
-                try {
-                    generateDNSFiles();
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-            }
-        }
-        FileWriter.generateDockerCompose(Paths.get(this.path + "/docker-compose.yml"), this.networks);
-    }
-    
-    /**
-     * generates the neccesary DNS files to handle the services on the local network
-     * @throws IOException
-     */
-    private void generateDNSFiles() throws IOException {
-        for (Network network : networks.values()) {             
-            Path path = Paths.get(this.path + "/dns1/");
-            Files.createDirectories(path);
-            Path zonePath = Paths.get(path + "/zones/");
-            Files.createDirectories(zonePath);
-            String domain = network.getName();
-            ArrayList<Device> devicesInNetwork = network.getDevicesInNetwork();
-            String filenameOne = FileWriter.writeForwardZone(devicesInNetwork, domain, path);
-            String filenameTwo = FileWriter.writeReverseZone(devicesInNetwork, domain, path, network.getAdressRange());
-            FileWriter.writeNamedConfLocal(domain, path, filenameOne, filenameTwo);
-            
-        }
-    }
-
     @Override
     public ArrayList<String> getNetworkInfo(String name) {
         Network network = networks.get(name);
@@ -261,29 +114,107 @@ public class Model implements IModelView, IModelController {
     public void setEntryPoint(String name) {
         this.entryPoint = name;
     }
+
+    @Override
+    public void createNetwork(String name, String adressRange) {
+        this.networkManager.createNetwork(name, adressRange);
+    }
+
+    @Override
+    public void addStandardNetwork() {
+        this.networkManager.addStandardNetwork();
+    }
+
+    @Override
+    public void deleteNetwork(String networkName) {
+        this.networkManager.deleteNetwork(networkName);
+    }
+
+    @Override
+    public void moveDevices(String destination, String origin) {
+        this.networkManager.moveDevices(destination, origin);
+    }
+
+    @Override
+    public void editNetwork(String oldName, String newName, String newAddressRange) {
+        this.networkManager.editNetwork(oldName, newName, newAddressRange);
+    }
+
+    //Device related Methods methods can be found in the DeviceMangaer Class
+    @Override
+    public void createCustomDevice(String name, String baseImage) {
+        this.deviceManager.createCustomDevice(name, baseImage);
+    }
+
+    @Override
+    public void createDevice(String deviceType) {
+        this.deviceManager.createDevice(deviceType);
+    }
+    
+    
+    @Override
+    public ArrayList<Device> getDevicesInNetwork(String networkName) {
+        return this.deviceManager.getDevicesInNetwork(networkName);
+    }
+
+    @Override
+    public ArrayList<Device> getUnassignedDevices() {
+        return this.unassignedDevices;
+    }
+
+    @Override
+    public void deleteDevice(String name, String home) {
+        this.deviceManager.deleteDevice(name, home);
+    }
+
+    @Override
+    public void assignDevice(String device, String network) {
+        this.deviceManager.assignDevice(device, network);
+
+    }
+    
+    @Override
+    public String findDevice(String name) {
+        return this.deviceManager.findDevice(name);
+    }
+
     @Override
     public void editDevice(String oldName, String newName, String newOS, String newServices, String entryPoint) {
-        Device device = this.devices.get(oldName);
-        if (newName != null && !newName.isEmpty()) {
-            device.setName(newName);
-        }
-        if (newOS != null && !newOS.isEmpty()) {
-            device.setBaseImage(newOS);
-        } 
-        if (newServices != null && !newServices.isEmpty()) {
-            String[] servicesArray = newServices.split(",");
-            for (String service : servicesArray) {
-                device.installService(service.trim());
+        this.deviceManager.editDevice(oldName, newName, newOS, newServices, entryPoint);
+    }
+
+    @Override
+    public void buildProject() {
+        for (Device device : devices.values()) {          
+            device.writeDockerfileToFile(Path.of(this.path));
+            if (device instanceof DNSServer) {
+                try {
+                    generateDNSFiles();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
             }
         }
-        if (entryPoint != null && !entryPoint.isEmpty()) {
-            boolean isEntryPoint = Boolean.parseBoolean(entryPoint);
-            device.setEntryPoint(isEntryPoint);
-            if (isEntryPoint) {
-                this.setEntryPoint(device.getName());
-            } else if (this.getEntryPoint().equals(device.getName())) {
-                this.setEntryPoint(null);  
-            }
+        FileWriter.generateDockerCompose(Paths.get(this.path + "/docker-compose.yml"), this.networks);
+    }
+    
+    /**
+     * generates the neccesary DNS files to handle the services on the local network
+     * @throws IOException
+     */
+    private void generateDNSFiles() throws IOException {
+        for (Network network : networks.values()) {             
+            Path path = Paths.get(this.path + "/dns1/");
+            Files.createDirectories(path);
+            Path zonePath = Paths.get(path + "/zones/");
+            Files.createDirectories(zonePath);
+            String domain = network.getName();
+            ArrayList<Device> devicesInNetwork = network.getDevicesInNetwork();
+            String filenameOne = FileWriter.writeForwardZone(devicesInNetwork, domain, path);
+            String filenameTwo = FileWriter.writeReverseZone(devicesInNetwork, domain, path, network.getAdressRange());
+            FileWriter.writeNamedConfLocal(domain, path, filenameOne, filenameTwo);
+            
         }
     }
 
@@ -335,6 +266,11 @@ public class Model implements IModelView, IModelController {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'saveModelAs'");
     }
+
+    public void resetdeviceFactory() {
+        DeviceFactory.resetCounters();
+    }
+
 
     @Override
     public int hashCode() {
@@ -399,10 +335,4 @@ public class Model implements IModelView, IModelController {
             return false;
         return true;
     }
-
-    public void resetdeviceFactory() {
-        DeviceFactory.resetCounters();
-    }
-
-    
 }

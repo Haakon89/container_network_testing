@@ -41,11 +41,24 @@ public interface IModelController {
     public void deleteDevice(String device, String home);
 
     /**
+     * deletes a network and all its related devices
+     * @param networkName name of the network to be deleted
+     */
+    public void deleteNetwork(String networkName);
+
+    /**
      * Assigns a device to a specific network.
      * @param device the name of the device to be assigned
      * @param network the name of the network to which the device will be assigned
      */
     public void assignDevice(String device, String network);
+
+    /**
+     * moves all devices from one place to another
+     * @param destination where the devices will end up
+     * @param origin where the devices are coming from
+     */
+    public void moveDevices(String destination, String origin);
     
     /**
      * Builds the project by writing Dockerfiles for each device and a docker-compose file for the network.
@@ -70,6 +83,14 @@ public interface IModelController {
     public void editDevice(String oldName, String newName, String newOS, String newServices, String entryPoint);
 
     /**
+     * Edits the information of a network and updates all devices in the network
+     * @param oldName the old name of the network
+     * @param newName a new name if any
+     * @param newAddressRange new address range if any
+     */
+    public void editNetwork(String oldName, String newName, String newAddressRange);
+
+    /**
      * loads the model from a given path
      * @param path the path to the model file
      */
@@ -87,6 +108,12 @@ public interface IModelController {
      * @param path the path where the model will be saved
      */
     public void saveModelAs(String name, String path);
+
+    
+
+    
+
+    
     
     
 }

@@ -1,5 +1,6 @@
 package network.simulation.test.View;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -303,14 +304,16 @@ public class ButtonHandler {
         dialog.setHeaderText("Choose a network:");
 
         dialog.showAndWait().ifPresent(device -> {
-            controller.onClick("assignDeviceToNetwork", networkItem.getValue(), device);
+            controller.onClick("assignDeviceToNetwork", device, networkItem.getValue());
         });
         this.view.updateDisplay();
     }
 
     protected void handleMoveDevices(TreeItem<String> networkItem) {
-        String thisNetwork = networkItem.getValue();
-        List<String> locations = model.getNetworkNames();
+        String item = networkItem.getValue();
+        String[] parts = item.split(": ");
+        String thisNetwork = parts[1];
+        List<String> locations = new ArrayList<>(model.getNetworkNames());
         locations.add("unassigned");
         locations.remove(thisNetwork);
         ChoiceDialog<String> dialog = new ChoiceDialog<>(locations.get(0), locations);
