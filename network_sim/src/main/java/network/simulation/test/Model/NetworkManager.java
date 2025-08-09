@@ -39,7 +39,8 @@ public class NetworkManager {
             model.devicesCreated--;
             model.devices.remove(deviceName);
         }
-        model.networks.remove(netToBeDeleted.getName());
+        model.networks.remove(networkName);
+        model.networkNames.remove(networkName);
     }
 
     public void moveDevices(String destination, String origin) {

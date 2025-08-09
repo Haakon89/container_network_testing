@@ -19,6 +19,7 @@ public class ProjectSaver {
     
     public static void saveProject(Model model) throws IOException {
         Path projectDir = Path.of(model.getPath());
+        System.out.println(model.getPath());
 
         Gson gson = getCustomGson();
         for (Map.Entry<String, Device> entry : model.getDevices().entrySet()) {

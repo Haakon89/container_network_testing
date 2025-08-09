@@ -9,15 +9,19 @@ import network.simulation.test.Model.Model;
 import network.simulation.test.View.IView;
 
 public class TestController {
-    String projectName = "TestProject";
-    String customNetworkName = "CustomNetwork";
-    String customDeviceName = "customdevice";
-    String standardNetworkName = "network1";
-    String customNetworkAddress = "192.168.1.0/24";
-    String standardDeviceName = "device1";
+
+    private final String PROJECT_NAME = "TestProject";
+    private final String CUSTOM_NETWORK_NAME = "CustomNetwork";
+    private final String CUSTOM_DEVICE_NAME = "customdevice";
+    private final String STANDARD_NETWORK_NAME = "network1";
+    private final String CUSTOM_NETWORK_ADRESS = "192.168.1.0/24";
+    private final String STANDARD_DEVICE_NAME = "standard1";
+    private final String STANDARD_DEVICE_DNS_TAG = "standard";
+    private final String PATH = "/test/test"; 
     Model model;
     IView view;
     MainController controller;
+
     @BeforeEach
     void setup() {
         model = new Model();
@@ -27,10 +31,10 @@ public class TestController {
 
     @Test
     void TestOnCickNewProject() {
-        assertNotEquals(model.getName(), projectName);
-        controller.onClick("newProject", projectName);
-        String actualProjectName = model.getName();
-        assertEquals(projectName, actualProjectName);
+        assertNotEquals(model.getName(), PROJECT_NAME);
+        controller.onClick("newProject", PROJECT_NAME, PATH);
+        String actualPROJECT_NAME = model.getName();
+        assertEquals(PROJECT_NAME, actualPROJECT_NAME);
     } 
 
     @Test
@@ -41,63 +45,63 @@ public class TestController {
         int newNetworkCount = model.getNetworkNames().size();
         assertEquals(initialNetworkCount + 1, newNetworkCount);
         String newNetworkName = model.getNetworkNames().get(0);
-        assertEquals(standardNetworkName, newNetworkName);
+        assertEquals(STANDARD_NETWORK_NAME, newNetworkName);
     }
 
     @Test
     void testOnClickAddCustomNetwork() {
         int initialNetworkCount = model.getNetworkNames().size();
         assertEquals(0, initialNetworkCount);
-        controller.onClick("addCustomNetwork", customNetworkName, customNetworkAddress);
+        controller.onClick("addCustomNetwork", CUSTOM_NETWORK_NAME, CUSTOM_NETWORK_ADRESS);
         int newNetworkCount = model.getNetworkNames().size();
         assertEquals(initialNetworkCount + 1, newNetworkCount);
         String newNetworkName = model.getNetworkNames().get(0);
-        assertEquals(customNetworkName, newNetworkName);
+        assertEquals(CUSTOM_NETWORK_NAME, newNetworkName);
     }
 
     @Test
     void testOnClickAddStandardDevice() {
         int initialDeviceCount = model.getUnassignedDevices().size();
         assertEquals(0, initialDeviceCount);
-        controller.onClick("addStandardDevice", standardNetworkName);
+        controller.onClick("createDevice", STANDARD_DEVICE_DNS_TAG);
         int newDeviceCount = model.getUnassignedDevices().size();
         assertEquals(initialDeviceCount + 1, newDeviceCount);
         String newDeviceName = model.getUnassignedDevices().get(0).getName();
-        assertEquals(standardDeviceName, newDeviceName);
+        assertEquals(STANDARD_DEVICE_NAME, newDeviceName);
     }
 
     @Test
     void testOnClickAddCustomDevice() {
         int initialDeviceCount = model.getUnassignedDevices().size();
         assertEquals(0, initialDeviceCount);
-        controller.onClick("addCustomDevice", customDeviceName, customNetworkName);
+        controller.onClick("createCustomDevice", CUSTOM_DEVICE_NAME, CUSTOM_NETWORK_NAME);
         int newDeviceCount = model.getUnassignedDevices().size();
         assertEquals(initialDeviceCount + 1, newDeviceCount);
         String newDeviceName = model.getUnassignedDevices().get(0).getName();
-        assertEquals(customDeviceName, newDeviceName);
+        assertEquals(CUSTOM_DEVICE_NAME, newDeviceName);
     }
-    /*
+    
     @Test
-    void testOnClickRemoveNetwork() {
+    void testOnClickDeleteNetwork() {
         controller.onClick("addStandardNetwork");
         int initialNetworkCount = model.getNetworkNames().size();
         assertEquals(1, initialNetworkCount);
-        controller.onClick("removeNetwork", standardNetworkName);
+        controller.onClick("deleteNetwork", STANDARD_NETWORK_NAME);
         int newNetworkCount = model.getNetworkNames().size();
         assertEquals(initialNetworkCount - 1, newNetworkCount);
     }
 
     @Test
     void testOnClickRemoveDevice() {
-        controller.onClick("addStandardDevice", standardNetworkName);
+        controller.onClick("createDevice", STANDARD_DEVICE_DNS_TAG);
         int initialDeviceCount = model.getUnassignedDevices().size();
         assertEquals(1, initialDeviceCount);
         String deviceName = model.getUnassignedDevices().get(0).getName();
-        controller.onClick("removeDevice", deviceName);
+        controller.onClick("deleteDevice", deviceName, "unassigned");
         int newDeviceCount = model.getUnassignedDevices().size();
         assertEquals(initialDeviceCount - 1, newDeviceCount);
     }
-    */
+    
     private static class DummyView implements IView {
         Model model;
         public DummyView(Model model) {

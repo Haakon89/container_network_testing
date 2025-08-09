@@ -31,8 +31,8 @@ public class Model implements IModelView, IModelController {
     protected int devicesCreated;
     protected String path;
     protected String entryPoint;
-    private DeviceManager deviceManager;
-    private NetworkManager networkManager;
+    private transient DeviceManager deviceManager;
+    private transient NetworkManager networkManager;
 
     public Model() {
         this.name = "";

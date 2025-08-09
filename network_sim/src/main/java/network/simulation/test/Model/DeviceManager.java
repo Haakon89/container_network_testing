@@ -13,16 +13,6 @@ public class DeviceManager {
     public DeviceManager(Model model) {
         this.model = model;
     }
-    
-    public void addStandardNetwork() {
-        HashMap<String, Network> networks = model.getNetworks();
-        String number = String.valueOf(networks.size() + 1);
-        String name = "network" + number;
-        String adressRange = "192.168.100.0/24";
-        Network network = new Network(name, adressRange);
-        model.networks.put(name, network);
-        model.networkNames.add(name);
-    }
 
     public void createCustomDevice(String name, String baseImage) {
         String lowerCaseName = name.toLowerCase();
