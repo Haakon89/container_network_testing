@@ -68,7 +68,21 @@ public class NetworkManager {
     }
 
     public void editNetwork(String oldName, String newName, String newAddressRange) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'editNetwork'");
+        Network networkToEdit = model.networks.get(oldName);
+        if (networkToEdit != null) {
+            if (newName != null && !newName.isEmpty()) {
+                networkToEdit.setName(newName);
+            }
+            if (newAddressRange != null && !newAddressRange.isEmpty()) {
+                networkToEdit.setAdressRange(newAddressRange);
+                ArrayList<Device> devicesToBeMoved = networkToEdit.resetDeviceAddresses();
+                for (Device device : devicesToBeMoved) {
+                    device.setIpAddress(null);
+                    model.unassignedDevices.add(device);
+                }
+            }
+        } else {
+            System.out.println("Network " + oldName + " not found.");
+        }
     }
 }

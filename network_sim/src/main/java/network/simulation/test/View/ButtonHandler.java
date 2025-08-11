@@ -37,7 +37,7 @@ public class ButtonHandler {
      * If custom, prompts for device details and calls the controller to add a custom device.
      */
     protected void handleAddDevice() {
-        ChoiceDialog<String> choice = new ChoiceDialog<>("Standard", "Standard", "DNS", "Web", "Printer", "Custom");
+        ChoiceDialog<String> choice = new ChoiceDialog<>("Standard", "Standard", "DNS", "Web", "Printer", "Firewall", "Custom");
         choice.setTitle("Add Device");
         choice.setHeaderText("Choose device type:");
         choice.setContentText("Type:");

@@ -1,6 +1,7 @@
 package network.simulation.test.Model.Nodes;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -15,16 +16,19 @@ public class DeviceFactory {
         deviceConstructors.put("dns", () -> new DNSServer(generateName("dns")));
         deviceConstructors.put("web", () -> new WebServer(generateName("web")));
         deviceConstructors.put("printer", () -> new PrinterDevice(generateName("printer")));
+        deviceConstructors.put("firewall", () -> new FirewallDevice(generateName("firewall")));
         // Add more device types here
     }
 
     public static Device buildDevice(String type) {
-        Supplier<Device> constructor = deviceConstructors.get(type.toLowerCase());
-        if (constructor == null) {
-            throw new IllegalArgumentException("Unknown device type: " + type);
-        }
-        return constructor.get();
+    String key = (type == null) ? "" : type.strip().toLowerCase(Locale.ROOT);
+    Supplier<Device> constructor = deviceConstructors.get(key);
+    if (constructor == null) {
+        throw new IllegalArgumentException(
+            "Unknown device type: '" + type + "'. Known: " + deviceConstructors.keySet());
     }
+    return constructor.get();
+}
 
     private static String generateName(String prefix) {
         int count = typeCounters.getOrDefault(prefix, 1);

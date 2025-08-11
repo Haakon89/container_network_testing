@@ -153,7 +153,29 @@ public class Network {
     public String getGateway() {
         return this.gatewayAddress;
     }
-
+    /**
+     * resets the IP addresses of all devices in the network.
+     * It removes all devices from the network, clears the reusable IP addresses,
+     * and then adds the devices back to the network with new IP addresses.
+     * used when the address range of the network is changed or when the network is reset.
+     */
+    public ArrayList<Device> resetDeviceAddresses() {
+        ArrayList<Device> olddevices = new ArrayList<>(this.devicesInNetwork);
+        ArrayList<Device> devicesToBeMoved = new ArrayList<>();
+        for (Device device : this.devicesInNetwork) {
+            this.removeDevice(device);
+        }
+        this.reusableIPAddresses.clear();
+        for (Device device : olddevices) {
+            if (checkCapacity()) {
+                this.addDevice(device);
+            } else {
+                System.out.println("No more space in " + this.name + " for device " + device.getName());
+                devicesToBeMoved.add(device);
+            }
+        }
+        return devicesToBeMoved;
+    }
     /**
      * Generates a Docker Compose configuration for the network.
      * It includes all devices in the network with their configurations.
