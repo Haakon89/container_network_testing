@@ -33,6 +33,8 @@ public class Model implements IModelView, IModelController {
     protected String entryPoint;
     private transient DeviceManager deviceManager;
     private transient NetworkManager networkManager;
+    protected ArrayList<String> availableAddressBlocks;
+    protected String usableAddressBlock;
 
     public Model() {
         this.name = "";
@@ -46,6 +48,9 @@ public class Model implements IModelView, IModelController {
         this.entryPoint = null;
         this.deviceManager = new DeviceManager(this);
         this.networkManager = new NetworkManager(this);
+        this.availableAddressBlocks = new ArrayList<>();
+        this.usableAddressBlock = "192.168.100.0/24";
+        
     }
     
     @Override

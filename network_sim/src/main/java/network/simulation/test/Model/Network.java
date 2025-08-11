@@ -1,6 +1,7 @@
 package network.simulation.test.Model;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import network.simulation.test.Model.Nodes.DNSServer;
 import network.simulation.test.Model.Nodes.Device;
@@ -14,14 +15,16 @@ public class Network {
     private ArrayList<Device> devicesInNetwork;
     private ArrayList<String> reusableIPAddresses;
 
+    private int nextHostOffset;
+
     public Network(String name, String adressRange) {
         this.name = name;
         this.adressRange = adressRange;
         this.capacity = 0;
         this.devicesInNetwork = new ArrayList<>();
         this.reusableIPAddresses = new ArrayList<>();
-        generateCapacity(adressRange);
-        this.gatewayAddress = generateIPAddress();
+        this.nextHostOffset = 1;
+        //generateCapacity(adressRange);
     }
 
     // Constructor for JSON deserialization
@@ -83,21 +86,54 @@ public class Network {
         }
     }
 
-    /**
-     * Generates an IP address for a device in the network.
-     * If there are reusable IP addresses, it uses one of them.
-     * Otherwise, it generates a new IP address based on the address range and the number of devices in the network.
-     * @return a new or reusable IP address
-     */
-    private String generateIPAddress() {
-        if (this.reusableIPAddresses.size() > 0) {
-            return this.reusableIPAddresses.remove(0);
-        }
-        int deviceNumber = this.devicesInNetwork.size() + 1;
-        String range = this.adressRange.split("/")[0];
-        String ipAddress = range.substring(0, range.length() - 1) + String.valueOf(deviceNumber);
-        return ipAddress;
+    public void resetAllocatorFor(String cidr, boolean reserveGateway) {
+        this.adressRange = cidr; // (typo?) addressRange
+        // Reserve .1 (or .129 etc.) for the gateway deterministically
+        nextHostOffset = reserveGateway ? 1 : 0;
     }
+
+    public String computeGateway(String cidr) {
+        String[] parts = cidr.split("/");
+        int base = ipToInt(parts[0]);
+        int firstUsable = base + 1;
+        return intToIp(firstUsable);
+    }
+
+    public String generateIPAddress() {
+        if (!reusableIPAddresses.isEmpty()) {
+            return reusableIPAddresses.remove(0);
+        }
+
+        String[] parts = this.adressRange.split("/");
+        int base = ipToInt(parts[0]);
+        int prefix = Integer.parseInt(parts[1]);
+        int hostBits = 32 - prefix;
+        int blockSize = 1 << hostBits;
+
+        int firstUsable = base + 1;
+        int lastUsable  = base + blockSize - 2;
+
+        int candidate = firstUsable + nextHostOffset;
+        if (candidate > lastUsable) {
+            throw new IllegalStateException("No more IPs in " + this.adressRange);
+        }
+        nextHostOffset++;
+        return intToIp(candidate);
+    }
+
+    private static int ipToInt(String ip) {
+        String[] o = ip.split("\\.");
+        return (Integer.parseInt(o[0]) << 24)
+            | (Integer.parseInt(o[1]) << 16)
+            | (Integer.parseInt(o[2]) << 8)
+            |  Integer.parseInt(o[3]);
+    }
+
+    private static String intToIp(int v) {
+        return ((v >>> 24) & 0xFF) + "." + ((v >>> 16) & 0xFF) + "." +
+            ((v >>> 8) & 0xFF) + "." + (v & 0xFF);
+    }
+    
 
     private boolean checkCapacity() {
         if (this.capacity <= 0) {
@@ -160,18 +196,22 @@ public class Network {
      * used when the address range of the network is changed or when the network is reset.
      */
     public ArrayList<Device> resetDeviceAddresses() {
-        ArrayList<Device> olddevices = new ArrayList<>(this.devicesInNetwork);
+        generateCapacity(adressRange);
+        ArrayList<Device> oldDevices = new ArrayList<>(this.devicesInNetwork);
         ArrayList<Device> devicesToBeMoved = new ArrayList<>();
-        for (Device device : this.devicesInNetwork) {
+        for (Device device : oldDevices) {
             this.removeDevice(device);
         }
         this.reusableIPAddresses.clear();
-        for (Device device : olddevices) {
-            if (checkCapacity()) {
-                this.addDevice(device);
-            } else {
-                System.out.println("No more space in " + this.name + " for device " + device.getName());
-                devicesToBeMoved.add(device);
+        this.gatewayAddress = computeGateway(adressRange);
+        if (!oldDevices.isEmpty()) {
+            for (Device device : oldDevices) {
+                if (checkCapacity()) {
+                    this.addDevice(device);
+                } else {
+                    System.out.println("No more space in " + this.name + " for device " + device.getName());
+                    devicesToBeMoved.add(device);
+                }
             }
         }
         return devicesToBeMoved;

@@ -14,6 +14,11 @@ public class DeviceManager {
         this.model = model;
     }
 
+    /**
+     * Creates a custom device with the specified name and base image.
+     * @param name the name of the device
+     * @param baseImage the base image for the device
+     */
     public void createCustomDevice(String name, String baseImage) {
         String lowerCaseName = name.toLowerCase();
         Device device = new CustomDevice(lowerCaseName, baseImage);
@@ -23,6 +28,11 @@ public class DeviceManager {
         model.devicesCreated++;
     }
 
+    /**
+     * Creates a device of the specified type.
+     * The type must be one of the predefined device types in DeviceFactory.
+     * @param deviceType the type of the device to create
+     */
     public void createDevice(String deviceType) {
         Device newDevice = DeviceFactory.buildDevice(deviceType);
         String name = newDevice.getName();
@@ -32,6 +42,11 @@ public class DeviceManager {
         model.devicesCreated++;
     }
 
+    /**
+     * Deletes a device by its name from the specified network or from unassigned devices.
+     * @param name the name of the device to delete
+     * @param home the network name where the device is located, or "unassigned" if it is not assigned to any network
+     */
     public void deleteDevice(String name, String home) {
         ArrayList<Device> unassignedDevices = model.getUnassignedDevices();
         if (home.equals("unassigned")) {
@@ -67,6 +82,12 @@ public class DeviceManager {
         }
     }
 
+    /**
+     * Assigns a device to a network.
+     * The device must be in the unassigned devices list.
+     * @param device the name of the device to assign
+     * @param network the name of the network to assign the device to
+     */
     public void assignDevice(String device, String network) {
         Device deviceToAssign = model.unassignedDevices.stream()
             .filter(d -> d.getName().equals(device))
@@ -77,6 +98,12 @@ public class DeviceManager {
         model.unassignedDevices.remove(deviceToAssign);
     }
     
+    /**
+     * Finds a device by its name and returns the network it belongs to.
+     * If the device is unassigned, it returns "unassigned".
+     * @param name the name of the device to find
+     * @return the name of the network the device belongs to, or "unassigned" if it is not assigned to any network
+     */
     public String findDevice(String name) {
         ArrayList<Device> unassignedDevices = model.getUnassignedDevices();
         HashMap<String, Network> networks = model.getNetworks();
@@ -95,6 +122,14 @@ public class DeviceManager {
         return null; // Device not found
     }
 
+    /**
+     * Edits the properties of a device.
+     * @param oldName the current name of the device
+     * @param newName the new name for the device, can be null to keep the same name
+     * @param newOS the new base image for the device, can be null to keep the same image
+     * @param newServices a comma-separated list of services to install on the device, can be null to keep the same services
+     * @param entryPoint whether the device should be set as an entry point, can be null to keep the current setting
+     */
     public void editDevice(String oldName, String newName, String newOS, String newServices, String entryPoint) {
         Device device = model.devices.get(oldName);
         if (newName != null && !newName.isEmpty()) {
@@ -120,6 +155,11 @@ public class DeviceManager {
         }
     }
 
+    /**
+     * Returns a list of devices in the specified network.
+     * @param networkName the name of the network to get devices from
+     * @return an ArrayList of devices in the specified network, or an empty list if the network does not exist
+     */
     public ArrayList<Device> getDevicesInNetwork(String networkName) {
         HashMap<String, Network> networks = model.getNetworks();
         Network network = networks.get(networkName);

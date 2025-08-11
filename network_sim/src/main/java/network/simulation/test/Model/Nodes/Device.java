@@ -13,6 +13,7 @@ public abstract class Device {
     protected String ipAddress; 
     protected String baseImage;
     protected String DNSLabel;
+   
 
     public Device(String name) {
         this.name = name;
