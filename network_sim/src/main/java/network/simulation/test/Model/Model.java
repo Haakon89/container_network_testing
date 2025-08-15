@@ -16,6 +16,7 @@ import network.simulation.test.Model.Nodes.CustomDevice;
 import network.simulation.test.Model.Nodes.DNSServer;
 import network.simulation.test.Model.Nodes.Device;
 import network.simulation.test.Model.Nodes.DeviceFactory;
+import network.simulation.test.Model.Nodes.RouterDevice;
 import network.simulation.test.UtilityClasses.FileWriter;
 import network.simulation.test.UtilityClasses.ProjectLoader;
 import network.simulation.test.UtilityClasses.ProjectSaver;
@@ -27,6 +28,7 @@ public class Model implements IModelView, IModelController {
     protected HashMap<String, Device> devices;
     protected ArrayList<String> networkNames;
     protected ArrayList<String> deviceNames;
+    protected ArrayList<RouterDevice> routers; 
     transient ArrayList<Device> unassignedDevices;
     protected int devicesCreated;
     protected String path;
@@ -42,6 +44,7 @@ public class Model implements IModelView, IModelController {
         this.devices = new HashMap<>();
         this.networkNames = new ArrayList<>();
         this.deviceNames = new ArrayList<>();
+        this.routers = new ArrayList<>();
         this.unassignedDevices = new ArrayList<>();
         this.devicesCreated = 0;
         this.path = "./";
@@ -83,6 +86,10 @@ public class Model implements IModelView, IModelController {
     @Override
     public ArrayList<String> getDeviceNames() {
         return this.deviceNames;
+    }
+
+    public ArrayList<RouterDevice> getRouters() {
+        return this.routers;
     }
     @Override
     public ArrayList<String> getNetworkInfo(String name) {
@@ -201,7 +208,7 @@ public class Model implements IModelView, IModelController {
                 }
             }
         }
-        FileWriter.generateDockerCompose(Paths.get(this.path + "/docker-compose.yml"), this.networks);
+        FileWriter.generateDockerCompose(Paths.get(this.path + "/docker-compose.yml"), this.networks, this.routers);
     }
     
     /**
@@ -217,7 +224,7 @@ public class Model implements IModelView, IModelController {
             String domain = network.getName();
             ArrayList<Device> devicesInNetwork = network.getDevicesInNetwork();
             String filenameOne = FileWriter.writeForwardZone(devicesInNetwork, domain, path);
-            String filenameTwo = FileWriter.writeReverseZone(devicesInNetwork, domain, path, network.getAdressRange());
+            String filenameTwo = FileWriter.writeReverseZone(devicesInNetwork, domain, path, network.getAddressRange());
             FileWriter.writeNamedConfLocal(domain, path, filenameOne, filenameTwo);
             
         }
@@ -248,6 +255,15 @@ public class Model implements IModelView, IModelController {
             this.devices = loadedModel.getDevices();
             this.networkNames = loadedModel.getNetworkNames();
             this.devicesCreated = loadedModel.getDevicesCreated();
+            this.routers = loadedModel.getRouters();
+            for (RouterDevice router : this.routers) {
+                for (String network : router.getConnectedNetworkNames()) {
+                    Network networkToAdd = this.networks.get(network);
+                    if (network != null) {
+                        router.addNetworkTorouter(networkToAdd);
+                    }
+                }
+            }
             this.path = loadedModel.getPath();
             this.entryPoint = loadedModel.getEntryPoint();
     

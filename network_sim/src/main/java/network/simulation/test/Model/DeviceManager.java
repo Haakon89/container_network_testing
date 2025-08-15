@@ -6,6 +6,7 @@ import java.util.HashMap;
 import network.simulation.test.Model.Nodes.CustomDevice;
 import network.simulation.test.Model.Nodes.Device;
 import network.simulation.test.Model.Nodes.DeviceFactory;
+import network.simulation.test.Model.Nodes.RouterDevice;
 
 public class DeviceManager {
     private Model model;
@@ -36,6 +37,9 @@ public class DeviceManager {
     public void createDevice(String deviceType) {
         Device newDevice = DeviceFactory.buildDevice(deviceType);
         String name = newDevice.getName();
+        if (deviceType.equals("router")) {
+            model.routers.add((RouterDevice) newDevice);
+        }
         model.unassignedDevices.add(newDevice);
         model.devices.put(name, newDevice);
         model.deviceNames.add(name);
@@ -84,18 +88,17 @@ public class DeviceManager {
 
     /**
      * Assigns a device to a network.
-     * The device must be in the unassigned devices list.
      * @param device the name of the device to assign
      * @param network the name of the network to assign the device to
      */
     public void assignDevice(String device, String network) {
-        Device deviceToAssign = model.unassignedDevices.stream()
-            .filter(d -> d.getName().equals(device))
-            .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("Device not found: " + device));
-
-        model.networks.get(network).addDevice(deviceToAssign);
-        model.unassignedDevices.remove(deviceToAssign);
+        Device deviceToAssigne = model.devices.get(device);
+        if (deviceToAssigne instanceof RouterDevice) {
+            ((RouterDevice) deviceToAssigne).addNetworkTorouter(model.networks.get(network));
+        } else {
+            model.networks.get(network).addDevice(deviceToAssigne);
+        }
+        model.unassignedDevices.remove(deviceToAssigne);
     }
     
     /**
@@ -106,17 +109,15 @@ public class DeviceManager {
      */
     public String findDevice(String name) {
         ArrayList<Device> unassignedDevices = model.getUnassignedDevices();
+        Device deviceToFind = model.devices.get(name);
         HashMap<String, Network> networks = model.getNetworks();
-        for (Device device : unassignedDevices) {
-            if (device.getName().equals(name)) {
-                return "unassigned";
-            }
+        if (unassignedDevices.contains(deviceToFind)) {
+            return "unassigned";
         }
         for (Network network : networks.values()) {
-            for (Device device : network.getDevicesInNetwork()) {
-                if (device.getName().equals(name)) {
-                    return network.getName();
-                }
+            ArrayList<Device> devicesInNetwork = network.getDevicesInNetwork();
+            if (devicesInNetwork.contains(deviceToFind)) {
+                return network.getName();
             }
         }
         return null; // Device not found

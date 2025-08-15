@@ -1,10 +1,9 @@
 package network.simulation.test.Model;
 
 import java.util.ArrayList;
-import java.util.List;
-
 import network.simulation.test.Model.Nodes.DNSServer;
 import network.simulation.test.Model.Nodes.Device;
+import network.simulation.test.Model.Nodes.RouterDevice;
 
 public class Network {
 
@@ -14,6 +13,8 @@ public class Network {
     private String gatewayAddress;
     private ArrayList<Device> devicesInNetwork;
     private ArrayList<String> reusableIPAddresses;
+    private RouterDevice router;
+    private String routerAddress;
 
     private int nextHostOffset;
 
@@ -24,7 +25,7 @@ public class Network {
         this.devicesInNetwork = new ArrayList<>();
         this.reusableIPAddresses = new ArrayList<>();
         this.nextHostOffset = 1;
-        //generateCapacity(adressRange);
+        this.router = null;
     }
 
     // Constructor for JSON deserialization
@@ -99,6 +100,26 @@ public class Network {
         return intToIp(firstUsable);
     }
 
+    private String computeRouterAddress(String cidr) {
+        String[] parts = cidr.split("/");
+        if (parts.length != 2) {
+            throw new IllegalArgumentException("Invalid CIDR: " + cidr);
+        }
+    
+        int base = ipToInt(parts[0]);
+        int prefix = Integer.parseInt(parts[1]);
+        int hostBits = 32 - prefix;
+    
+        // For /31 and /32 there are no traditional usable host addresses
+        if (hostBits <= 1) {
+            throw new IllegalArgumentException("CIDR " + cidr + " has no usable host addresses");
+        }
+    
+        int blockSize = 1 << hostBits;      // number of IPs in the block
+        int lastUsable = base + blockSize - 2; // last host (network is +0, broadcast is +blockSize-1)
+        return intToIp(lastUsable);
+    }
+
     public String generateIPAddress() {
         if (!reusableIPAddresses.isEmpty()) {
             return reusableIPAddresses.remove(0);
@@ -124,14 +145,32 @@ public class Network {
     private static int ipToInt(String ip) {
         String[] o = ip.split("\\.");
         return (Integer.parseInt(o[0]) << 24)
-            | (Integer.parseInt(o[1]) << 16)
-            | (Integer.parseInt(o[2]) << 8)
-            |  Integer.parseInt(o[3]);
+             | (Integer.parseInt(o[1]) << 16)
+             | (Integer.parseInt(o[2]) << 8)
+             |  Integer.parseInt(o[3]);
     }
 
     private static String intToIp(int v) {
-        return ((v >>> 24) & 0xFF) + "." + ((v >>> 16) & 0xFF) + "." +
-            ((v >>> 8) & 0xFF) + "." + (v & 0xFF);
+        return ((v >>> 24) & 0xFF) + "." +
+           ((v >>> 16) & 0xFF) + "." +
+           ((v >>> 8)  & 0xFF) + "." +
+           (v & 0xFF);
+    }
+    
+    public void addRouter(RouterDevice routerDevice) {
+        if (checkCapacity()) {
+            this.devicesInNetwork.add(routerDevice);
+            routerDevice.setIPAddress(this.name, this.routerAddress);
+            this.router = routerDevice;
+            this.capacity--;
+        }
+        else {
+            System.out.println("No more space in " + this.name);
+        }
+    }
+
+    public String getRouterAddress() {
+        return this.routerAddress;
     }
     
 
@@ -155,7 +194,7 @@ public class Network {
         generateCapacity(adressRange);
     }
 
-    public String getAdressRange() {
+    public String getAddressRange() {
         return this.adressRange;
     }
 
@@ -203,10 +242,16 @@ public class Network {
             this.removeDevice(device);
         }
         this.reusableIPAddresses.clear();
+        this.router = null;
+        this.nextHostOffset = 1;
         this.gatewayAddress = computeGateway(adressRange);
+        this.routerAddress = computeRouterAddress(adressRange);
         if (!oldDevices.isEmpty()) {
             for (Device device : oldDevices) {
                 if (checkCapacity()) {
+                    if (device instanceof RouterDevice) {
+                        addRouter((RouterDevice) device);
+                    }
                     this.addDevice(device);
                 } else {
                     System.out.println("No more space in " + this.name + " for device " + device.getName());
@@ -225,22 +270,20 @@ public class Network {
         Device dns = hasDNS();
         StringBuilder sb = new StringBuilder();
         for (Device device : this.devicesInNetwork) {
-            sb.append("  ").append(device.getName()).append(":\n");
-            sb.append("    build: ./" + device.getName() + "\n");
-            sb.append("    container_name: ").append(device.getName()).append("\n");
-            /*
-            if (device.getStartupCommand() != null && !device.getStartupCommand().isBlank()) {
-                sb.append("    command: ").append(device.getStartupCommand()).append("\n");
+            if (device instanceof RouterDevice) {
+                continue;
             }
-
-            List<Integer> ports = device.getExposedPorts();
-            if (ports != null && !ports.isEmpty()) {
-                sb.append("    ports:\n");
-                for (int port : ports) {
-                    sb.append("      - \"").append(port).append(":").append(port).append("\"\n");
+            String name = device.getName();
+            String connectedNetworkAddressRange = "";
+            for (Network network : this.router.getConnectedNetworks()) {
+                if (!network.getName().equals(this.name)) {
+                    connectedNetworkAddressRange = network.getAddressRange();
+                    break;
                 }
             }
-            */
+            sb.append("  ").append(name).append(":\n");
+            sb.append("    build: ./" + name + "\n");
+            sb.append("    container_name: ").append(name).append("\n");
             sb.append("    networks:\n");
             sb.append("      ").append(this.name).append(":\n");
             sb.append("        ipv4_address: ").append(device.getIpAddress()).append("\n");
@@ -251,8 +294,13 @@ public class Network {
             else {
                 sb.append("\n");
             }
-            
-        }
+            sb.append("  " + name).append("-netadmin:\n");
+            sb.append("    image: alpine\n");
+            sb.append("    network_mode: \"service:" + name + "\"").append("\n");
+            sb.append("    cap_add: [ NET_ADMIN ]\n");
+            sb.append("    depends_on: [ " + name + " ]\n");
+            sb.append("    command: [\"sh\", \"-c\",\"apk add --no-cache iproute2 >/dev/null 2>&1 || true; ip route add " + connectedNetworkAddressRange + " via " + this.routerAddress + " || true]\"").append("\n\n");
+        }   
 
         return sb.toString();
     }
@@ -264,6 +312,19 @@ public class Network {
             }
         }
         return null;
+    }
+
+    public ArrayList<String> getDisplayInfo() {
+        ArrayList<String> info = new ArrayList<>();
+        info.add("Network Name: " + this.name);
+        info.add("Address Range: " + this.adressRange);
+        info.add("Capacity: " + this.capacity);
+        info.add("Gateway Address: " + this.gatewayAddress);
+        info.add("Devices in Network:");
+        for (Device device : this.devicesInNetwork) {
+            info.add("  - " + device.getName() + " (" + device.getIpAddress() + ")");
+        }
+        return info;
     }
 
     @Override
@@ -318,18 +379,5 @@ public class Network {
         return true;
     }
 
-    public ArrayList<String> getDisplayInfo() {
-        ArrayList<String> info = new ArrayList<>();
-        info.add("Network Name: " + this.name);
-        info.add("Address Range: " + this.adressRange);
-        info.add("Capacity: " + this.capacity);
-        info.add("Gateway Address: " + this.gatewayAddress);
-        info.add("Devices in Network:");
-        for (Device device : this.devicesInNetwork) {
-            info.add("  - " + device.getName() + " (" + device.getIpAddress() + ")");
-        }
-        return info;
-    }
-    
     
 }

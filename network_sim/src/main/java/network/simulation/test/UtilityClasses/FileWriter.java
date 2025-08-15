@@ -9,6 +9,7 @@ import java.util.HashMap;
 
 import network.simulation.test.Model.Network;
 import network.simulation.test.Model.Nodes.Device;
+import network.simulation.test.Model.Nodes.RouterDevice;
 
 public class FileWriter {
     //This class will contain all instances of writing text to a file which can then be used by the other classes to generate the files that they need
@@ -22,10 +23,24 @@ public class FileWriter {
      * @param path the path where the docker-compose.yml file will be created
      * @param networks the networks that have the information that we need
      */
-    public static void generateDockerCompose(Path path, HashMap<String, Network> networks) {
+    public static void generateDockerCompose(Path path, HashMap<String, Network> networks, ArrayList<RouterDevice> routers) {
         StringBuilder compose = new StringBuilder();
         compose.append("services:\n");
-
+        for (RouterDevice router : routers) {
+            compose.append("  ").append(router.getName()).append(":\n");
+            compose.append("    build: ./" + router.getName() + "\n");
+            compose.append("    container_name: ").append(router.getName()).append("\n");
+            compose.append("    cap_add: [ NET_ADMIN ]\n");
+            compose.append("    sysctls:\n");
+            compose.append("      net.ipv4.ip_forward: \"1\"\n");
+            compose.append("    command: [\"nat\"]\n");
+            compose.append("    networks:\n");
+            for (Network network : router.getConnectedNetworks()) {
+                compose.append("      ").append(network.getName()).append(":\n");
+                compose.append("        ipv4_address: ").append(network.getRouterAddress()).append("\n");
+            }
+            compose.append("    restart: unless-stopped\n\n");
+        }
         for (Network network : networks.values()) {
             compose.append(network.getComposeInfo());
         }
@@ -37,7 +52,7 @@ public class FileWriter {
             compose.append("    driver: bridge\n");
             compose.append("    ipam:\n");
             compose.append("      config:\n");
-            compose.append("        - subnet: ").append(network.getAdressRange()).append("\n");
+            compose.append("        - subnet: ").append(network.getAddressRange()).append("\n");
             compose.append("          gateway: ").append(network.getGateway()).append("\n");
         }
 

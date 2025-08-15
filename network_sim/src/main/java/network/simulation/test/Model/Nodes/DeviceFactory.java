@@ -17,6 +17,7 @@ public class DeviceFactory {
         deviceConstructors.put("web", () -> new WebServer(generateName("web")));
         deviceConstructors.put("printer", () -> new PrinterDevice(generateName("printer")));
         deviceConstructors.put("firewall", () -> new FirewallDevice(generateName("firewall")));
+        deviceConstructors.put("router", () -> new RouterDevice(generateName("router")));
         // Add more device types here
     }
 

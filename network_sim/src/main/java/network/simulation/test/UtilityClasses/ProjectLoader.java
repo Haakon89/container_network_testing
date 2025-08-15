@@ -6,7 +6,9 @@ import com.google.gson.GsonBuilder;
 import network.simulation.test.Model.Model;
 import network.simulation.test.Model.Nodes.DNSServer;
 import network.simulation.test.Model.Nodes.Device;
+import network.simulation.test.Model.Nodes.FirewallDevice;
 import network.simulation.test.Model.Nodes.PrinterDevice;
+import network.simulation.test.Model.Nodes.RouterDevice;
 import network.simulation.test.Model.Nodes.StandardDevice;
 import network.simulation.test.Model.Nodes.WebServer;
 
@@ -39,7 +41,9 @@ public class ProjectLoader {
             .registerSubtype(StandardDevice.class, "standard")
             .registerSubtype(DNSServer.class, "dns")
             .registerSubtype(WebServer.class, "webserver")
-            .registerSubtype(PrinterDevice.class, "printer");
+            .registerSubtype(PrinterDevice.class, "printer")
+            .registerSubtype(FirewallDevice.class, "firewall")
+            .registerSubtype(RouterDevice.class, "router");
         
         return new GsonBuilder()
             .registerTypeAdapterFactory(adapter)
